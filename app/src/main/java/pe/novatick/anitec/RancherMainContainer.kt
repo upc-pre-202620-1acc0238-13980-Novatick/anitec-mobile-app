@@ -1,4 +1,4 @@
-package pe.novatick.anitec
+package pe.novatick.anitec.ui.screens.home
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -9,6 +9,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import pe.novatick.anitec.RancherCattleScreen
+import pe.novatick.anitec.RancherHomeScreen
+import pe.novatick.anitec.RancherInviteVetsScreen
+import pe.novatick.anitec.RancherLinkedVetsScreen
+import pe.novatick.anitec.RancherProfileScreen
+import pe.novatick.anitec.RancherRegisterAnimalScreen
+import pe.novatick.anitec.RancherVetsScreen
+import pe.novatick.anitec.RancherVisitDetailScreen
+import pe.novatick.anitec.RancherVisitsScreen
 import pe.novatick.anitec.ui.components.RancherBottomBar
 import pe.novatick.anitec.ui.navigation.RancherTab
 
@@ -20,9 +29,13 @@ fun RancherMainContainer(
     var currentScreen by remember { mutableStateOf("home") }
     var selectedAnimalId by remember { mutableStateOf<String?>(null) }
 
+    // Estado para recordar la pantalla previa antes de crear una observación
+    var previousScreenForObservation by remember { mutableStateOf("animal_detail") }
+    var previousScreenForHistoryDetail by remember { mutableStateOf("animal_detail") }
+    var previousScreenForIndicationDetail by remember { mutableStateOf("home") }
+
     Scaffold(
         bottomBar = {
-            // BARRA DE NAVEGACIÓN ESTÁTICA ENTRE VISTAS
             RancherBottomBar(
                 currentTab = activeTab,
                 onTabSelected = { selectedTab ->
@@ -39,7 +52,6 @@ fun RancherMainContainer(
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (currentScreen) {
-                // Vista Inicio
                 "home" -> RancherHomeScreen(
                     onNavigateToCattle = {
                         activeTab = RancherTab.CATTLE
@@ -66,12 +78,12 @@ fun RancherMainContainer(
                         currentScreen = "visit_detail"
                     },
                     onNavigateToIndicationDetail = {
+                        previousScreenForIndicationDetail = "home"
                         activeTab = RancherTab.CATTLE
                         currentScreen = "indication_detail"
                     }
                 )
 
-                // Vista Mi Ganado (Activa ic_cow.svg)
                 "cattle" -> RancherCattleScreen(
                     onNavigateToRegisterAnimal = {
                         activeTab = RancherTab.CATTLE
@@ -84,13 +96,10 @@ fun RancherMainContainer(
                     }
                 )
 
-                // VISTA REGISTRAR ANIMAL (Mantiene activo ic_cow.svg)
                 "register_animal" -> {
                     activeTab = RancherTab.CATTLE
                     RancherRegisterAnimalScreen(
-                        onBackClick = {
-                            currentScreen = "cattle"
-                        },
+                        onBackClick = { currentScreen = "cattle" },
                         onSaveSuccess = {
                             activeTab = RancherTab.CATTLE
                             currentScreen = "cattle"
@@ -98,13 +107,82 @@ fun RancherMainContainer(
                     )
                 }
 
-                // VISTA DETALLE ANIMAL (Mantiene activo ic_cow.svg)
                 "animal_detail" -> {
                     activeTab = RancherTab.CATTLE
                     RancherAnimalDetailScreen(
                         animalId = selectedAnimalId,
+                        onBackClick = { currentScreen = "cattle" },
+                        onNavigateToObservations = { currentScreen = "animal_observations" },
+                        onNavigateToNewObservation = { currentScreen = "animal_new_observation" },
+                        onNavigateToHistory = { currentScreen = "animal_history" },
+                        onNavigateToHistoryDetail = { currentScreen = "animal_history_detail" },
+                        onNavigateToEditAnimal = { currentScreen = "edit_animal" },
+                        onConfirmDeactivate = { currentScreen = "cattle" }
+                    )
+                }
+
+                "animal_observations" -> {
+                    activeTab = RancherTab.CATTLE
+                    RancherAnimalObservationsScreen(
                         onBackClick = {
-                            currentScreen = "cattle"
+                            currentScreen = "animal_detail"
+                        },
+                        onNavigateToNewObservation = {
+                            currentScreen = "animal_new_observation"
+                        }
+                    )
+                }
+                "animal_new_observation" -> {
+                    activeTab = RancherTab.CATTLE
+                    RancherAnimalNewObservationScreen(
+                        onNavigateBack = {
+                            currentScreen = previousScreenForObservation
+                        }
+                    )
+                }
+                "animal_history" -> {
+                    activeTab = RancherTab.CATTLE
+                    RancherAnimalHistoryScreen(
+                        onBackClick = {
+                            currentScreen = "animal_detail"
+                        },
+                        onNavigateToHistoryDetail = { historyId ->
+                            currentScreen = "animal_history_detail"
+                        }
+                    )
+                }
+                "animal_history_detail" -> {
+                    activeTab = RancherTab.CATTLE
+                    RancherAnimalHistoryDetailScreen(
+                        onBackClick = {
+                            currentScreen = previousScreenForHistoryDetail
+                        },
+                        onNavigateToIndicationDetail = {
+                            currentScreen = "indication_detail"
+                        }
+                    )
+                }
+
+                "indication_detail" -> {
+                    activeTab = RancherTab.CATTLE
+                    RancherIndicationDetailScreen(
+                        onBackClick = {
+                            currentScreen = previousScreenForIndicationDetail
+                            if (previousScreenForIndicationDetail == "home") {
+                                activeTab = RancherTab.HOME
+                            }
+                        }
+                    )
+                }
+
+                "edit_animal" -> {
+                    activeTab = RancherTab.CATTLE
+                    RancherEditAnimalScreen(
+                        onBackClick = {
+                            currentScreen = "animal_detail"
+                        },
+                        onSaveSuccess = {
+                            currentScreen = "animal_detail"
                         }
                     )
                 }
@@ -113,7 +191,6 @@ fun RancherMainContainer(
                 "invite_vets" -> RancherInviteVetsScreen()
                 "visits" -> RancherVisitsScreen()
                 "visit_detail" -> RancherVisitDetailScreen()
-                "indication_detail" -> RancherIndicationDetailScreen()
                 "vets" -> RancherVetsScreen()
                 "profile" -> RancherProfileScreen()
             }

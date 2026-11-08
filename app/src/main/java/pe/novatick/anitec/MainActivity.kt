@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import pe.novatick.anitec.ui.screens.home.RancherMainContainer
 import pe.novatick.anitec.ui.theme.AniTecTheme
 
 class MainActivity : ComponentActivity() {
