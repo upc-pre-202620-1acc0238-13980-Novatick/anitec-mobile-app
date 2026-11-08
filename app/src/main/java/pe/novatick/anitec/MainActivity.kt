@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import pe.novatick.anitec.ui.screens.home.RancherMainContainer
+import pe.novatick.anitec.ui.screens.veterinarian.VeterinarianMainContainer
 import pe.novatick.anitec.ui.theme.AniTecTheme
 
 class MainActivity : ComponentActivity() {
@@ -31,7 +32,7 @@ class MainActivity : ComponentActivity() {
 fun AniTecAppNavigation() {
     val navController = rememberNavController()
 
-    // Estado global simple para mantener el rol seleccionado en el registro
+    // Estado global para mantener el rol seleccionado en el registro
     var selectedRoleByRegister by remember { mutableStateOf(UserRole.GANADERO) }
 
     NavHost(
@@ -107,7 +108,7 @@ fun AniTecAppNavigation() {
             )
         }
 
-        // 6.1. Home para Ganadero (Contenedor con Bottom Navigation integrada)
+        // 6.1 Home para Ganadero (Contenedor con Bottom Navigation integrada)
         composable("home_rancher") {
             RancherMainContainer(
                 onNavigateToLogin = {
@@ -118,9 +119,15 @@ fun AniTecAppNavigation() {
             )
         }
 
-        // 6.2 Home para Veterinario
+        // 6.2 Home para Veterinario (Contenedor con Bottom Navigation integrada)
         composable("home_veterinarian") {
-            // Reemplazar con VeterinarianMainContainer() cuando esté creado
+            VeterinarianMainContainer(
+                onNavigateToLogin = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
