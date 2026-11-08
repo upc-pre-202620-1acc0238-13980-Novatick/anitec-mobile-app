@@ -11,11 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import pe.novatick.anitec.RancherCattleScreen
 import pe.novatick.anitec.RancherHomeScreen
-import pe.novatick.anitec.RancherInviteVetsScreen
-import pe.novatick.anitec.RancherLinkedVetsScreen
-import pe.novatick.anitec.RancherProfileScreen
 import pe.novatick.anitec.RancherRegisterAnimalScreen
-import pe.novatick.anitec.RancherVetsScreen
 import pe.novatick.anitec.ui.components.RancherBottomBar
 import pe.novatick.anitec.ui.navigation.RancherTab
 
@@ -207,10 +203,44 @@ fun RancherMainContainer(
                     )
                 }
 
-                "linked_vets" -> RancherLinkedVetsScreen()
-                "invite_vets" -> RancherInviteVetsScreen()
-                "vets" -> RancherVetsScreen()
-                "profile" -> RancherProfileScreen()
+                "invite_vets" -> {
+                    activeTab = RancherTab.HOME
+                    RancherInviteVetsScreen(
+                        onBackClick = {
+                            currentScreen = "home"
+                        },
+                        onSendSuccess = {
+                            currentScreen = "home"
+                        }
+                    )
+                }
+
+                "vets" -> {
+                    activeTab = RancherTab.VETS
+                    RancherVetsScreen(
+                        onInviteVetClick = {
+                            activeTab = RancherTab.HOME
+                            currentScreen = "invite_vets"
+                        },
+                        onRemoveVetClick = {
+                            activeTab = RancherTab.HOME
+                            currentScreen = "home"
+                        },
+                        onCancelInviteClick = {
+                            activeTab = RancherTab.HOME
+                            currentScreen = "home"
+                        }
+                    )
+                }
+
+                "profile" -> {
+                    activeTab = RancherTab.PROFILE
+                    RancherProfileScreen(
+                        onLogoutClick = {
+                            onNavigateToLogin()
+                        }
+                    )
+                }
             }
         }
     }
