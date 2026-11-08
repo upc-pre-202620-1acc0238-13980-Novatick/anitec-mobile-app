@@ -16,8 +16,6 @@ import pe.novatick.anitec.RancherLinkedVetsScreen
 import pe.novatick.anitec.RancherProfileScreen
 import pe.novatick.anitec.RancherRegisterAnimalScreen
 import pe.novatick.anitec.RancherVetsScreen
-import pe.novatick.anitec.RancherVisitDetailScreen
-import pe.novatick.anitec.RancherVisitsScreen
 import pe.novatick.anitec.ui.components.RancherBottomBar
 import pe.novatick.anitec.ui.navigation.RancherTab
 
@@ -33,6 +31,7 @@ fun RancherMainContainer(
     var previousScreenForObservation by remember { mutableStateOf("animal_detail") }
     var previousScreenForHistoryDetail by remember { mutableStateOf("animal_detail") }
     var previousScreenForIndicationDetail by remember { mutableStateOf("home") }
+    var previousScreenForVisitDetail by remember { mutableStateOf("home") }
 
     Scaffold(
         bottomBar = {
@@ -187,10 +186,29 @@ fun RancherMainContainer(
                     )
                 }
 
+                "visits" -> {
+                    activeTab = RancherTab.HOME
+                    RancherVisitsScreen(
+                        onBackClick = {
+                            currentScreen = "home"
+                        },
+                        onNavigateToVisitDetail = { visitId ->
+                            currentScreen = "visit_detail"
+                        }
+                    )
+                }
+
+                "visit_detail" -> {
+                    activeTab = RancherTab.HOME
+                    RancherVisitDetailScreen(
+                        onBackClick = {
+                            currentScreen = previousScreenForVisitDetail
+                        }
+                    )
+                }
+
                 "linked_vets" -> RancherLinkedVetsScreen()
                 "invite_vets" -> RancherInviteVetsScreen()
-                "visits" -> RancherVisitsScreen()
-                "visit_detail" -> RancherVisitDetailScreen()
                 "vets" -> RancherVetsScreen()
                 "profile" -> RancherProfileScreen()
             }

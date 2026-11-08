@@ -105,7 +105,7 @@ fun RancherIndicationDetailScreen(
                         text = "Indicaciones de Cuidado",
                         fontFamily = Poppins,
                         fontWeight = FontWeight.ExtraBold,
-                        fontSize = 24.sp,
+                        fontSize = 22.sp,
                         color = PrimaryGreenAccent
                     )
                 }
