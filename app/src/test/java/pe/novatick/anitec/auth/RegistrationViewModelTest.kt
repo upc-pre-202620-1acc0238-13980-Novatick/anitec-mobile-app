@@ -44,7 +44,7 @@ class RegistrationViewModelTest {
             vm.register(form(),"es");runCurrent();vm.continueVerification("other@example.invalid",null)
             fake.gate!!.complete(Unit);runCurrent()
             assertEquals("other@example.invalid",vm.uiState.value.email)
-            vm.resend(null,"es");assertEquals(RegistrationIssue.CONTEXT,vm.uiState.value.issue);assertEquals(0,fake.resends)
+            vm.resend(null,"es");assertTrue(vm.uiState.value.passwordPrompt);assertEquals(0,fake.resends)
         } finally { Dispatchers.resetMain() }
     }
     @Test fun verifyAndResendAreSerializedAndSuccessReturnsToLoginStage()=runTest {
@@ -56,7 +56,7 @@ class RegistrationViewModelTest {
             assertEquals(1,fake.verifies);assertEquals(0,fake.resends)
             fake.gate!!.complete(Unit);runCurrent();assertEquals(RegistrationStep.COMPLETE,vm.uiState.value.step)
             vm.abandon();vm.continueVerification("test@example.invalid",null);vm.resend(null,"es")
-            assertEquals(RegistrationIssue.CONTEXT,vm.uiState.value.issue)
+            assertTrue(vm.uiState.value.passwordPrompt)
         } finally { Dispatchers.resetMain() }
     }
     @Test fun failedVerificationKeepsContextAndCooldownNeverEmitsAutomatically()=runTest {
@@ -81,7 +81,7 @@ class RegistrationViewModelTest {
             assertEquals(RegistrationNotice.GENERIC_RESEND,vm.uiState.value.notice)
             assertEquals(0L,vm.uiState.value.codeVersion);assertNull(vm.uiState.value.remaining)
             vm.abandon(true);vm.continueVerification("test@example.invalid",null);vm.resend(null,"es")
-            assertEquals(RegistrationIssue.CONTEXT,vm.uiState.value.issue);assertEquals(1,fake.resends)
+            assertTrue(vm.uiState.value.passwordPrompt);assertEquals(1,fake.resends)
         } finally { Dispatchers.resetMain() }
     }
     @Test fun contextIsCapturedBeforeDispatchAndLateVerifyCannotCompleteNewFlow()=runTest {
@@ -146,6 +146,37 @@ class RegistrationViewModelTest {
             vm.clearVerificationContext();gate.complete(Unit);runCurrent()
             assertFalse(vm.uiState.value.unverified)
             vm.continueVerification { _,_ -> fail("Abandoned credential was retained") }
+        } finally { Dispatchers.resetMain() }
+    }
+    @Test fun passwordPromptIsOnDemandCancelClearsDraftAndValidContextDoesNotPrompt()=runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val fake=Fake();fake.result=ResendResult(true,4,61000)
+            val vm=RegistrationViewModel(fake) { 1000L }
+            vm.continueVerification("test@example.invalid",null)
+            assertFalse(vm.uiState.value.passwordPrompt)
+            vm.resend(null,"es");assertTrue(vm.uiState.value.passwordPrompt);assertEquals(0,fake.resends)
+            vm.updatePasswordDraft("private-draft")
+            assertFalse(vm.uiState.value.toString().contains("private-draft"))
+            vm.dismissPasswordPrompt();assertEquals("",vm.passwordDraftForEntry());assertEquals(0,fake.resends)
+            vm.resend(null,"es");vm.updatePasswordDraft("secret")
+            vm.resend(vm.passwordDraftForEntry(),"es");runCurrent()
+            assertEquals(1,fake.resends);assertEquals("",vm.passwordDraftForEntry());assertFalse(vm.uiState.value.passwordPrompt)
+            vm.abandon();vm.continueVerification("test@example.invalid","known")
+            vm.resend(null,"es");runCurrent();assertFalse(vm.uiState.value.passwordPrompt)
+        } finally { Dispatchers.resetMain() }
+    }
+    @Test fun genericResponseDiscardsUnaccreditedContextAndOverlongDraftIsNotTruncated()=runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val fake=Fake();val vm=RegistrationViewModel(fake)
+            vm.continueVerification("test@example.invalid",null);vm.resend(null,"es")
+            vm.updatePasswordDraft("x".repeat(257));vm.resend(vm.passwordDraftForEntry(),"es")
+            assertEquals(257,vm.passwordDraftForEntry().length);assertEquals(0,fake.resends)
+            vm.updatePasswordDraft("secret");fake.result=ResendResult(false)
+            vm.resend(vm.passwordDraftForEntry(),"es");runCurrent()
+            vm.resend(null,"es");assertTrue(vm.uiState.value.passwordPrompt);assertEquals(1,fake.resends)
+            vm.abandon();assertEquals("",vm.passwordDraftForEntry())
         } finally { Dispatchers.resetMain() }
     }
 }

@@ -112,6 +112,8 @@ fun AniTecAppNavigation(vm: AuthViewModel,registration: RegistrationViewModel?=n
                         androidx.activity.compose.BackHandler { registration.abandon(); nav.navigate("login") { popUpTo(nav.graph.id) { inclusive=false } } }
                         VerifyEmailScreen(state=regState,onVerify=registration::verify,
                             onResend={ registration.resend(it,language) },
+                            passwordDraft=registration::passwordDraftForEntry,onPasswordChange=registration::updatePasswordDraft,
+                            onDismissPassword=registration::dismissPasswordPrompt,
                             onChangeEmailClick={ registration.abandon(true); nav.navigate("register") { popUpTo(nav.graph.id) { inclusive=false } } },
                             onLogin={ registration.abandon(); nav.navigate("login") { popUpTo(nav.graph.id) { inclusive=false } } })
                     }

@@ -14,14 +14,19 @@ enum class RegistrationNotice { PENDING, GENERIC_RESEND, AUTHORIZED_RESEND, CHAN
 data class RegistrationUiState(val step: RegistrationStep=RegistrationStep.FORM, val email: String="",
     val busy: Boolean=false, val issue: RegistrationIssue?=null, val errorCode: String?=null,
     val fields: List<String> = emptyList(), val waitUntil: Long?=null, val verifyWaitUntil: Long?=null, val remaining: Int?=null,
-    val notice: RegistrationNotice?=null, val codeVersion: Long=0)
+    val notice: RegistrationNotice?=null, val codeVersion: Long=0,
+    val passwordPrompt: Boolean=false, val draftRevision: Long=0)
 class RegistrationViewModel(private val repository: RegistrationRepository, private val now: ()->Long=System::currentTimeMillis) : ViewModel() {
     private val state=MutableStateFlow(RegistrationUiState())
     val uiState=state.asStateFlow()
     private var password: String?=null
     private var generation=0L
+    private var resendDraft=""
+    fun passwordDraftForEntry(): String = resendDraft
+    fun updatePasswordDraft(value: String) { resendDraft=value; state.value=state.value.copy(draftRevision=state.value.draftRevision+1) }
+    fun dismissPasswordPrompt() { resendDraft=""; state.value=state.value.copy(passwordPrompt=false,issue=null) }
     fun abandon(changingEmail: Boolean=false) {
-        generation++; password=null
+        generation++; password=null; resendDraft=""
         state.value=RegistrationUiState(notice=if(changingEmail) RegistrationNotice.CHANGE_EMAIL else null)
     }
     fun continueVerification(email: String,credential: String?) {
@@ -54,7 +59,10 @@ class RegistrationViewModel(private val repository: RegistrationRepository, priv
     fun resend(credential: String?,language: String) {
         if(state.value.busy || state.value.step!=RegistrationStep.VERIFY || now()<(state.value.waitUntil ?: 0)) return
         val secret=credential?.takeIf { it.isNotEmpty() } ?: password
-        if(secret==null || secret.length>256) { fail(RegistrationFailure(RegistrationIssue.CONTEXT)); return }
+        if(secret==null) { state.value=state.value.copy(passwordPrompt=true,issue=null,errorCode=null); return }
+        if(secret.length>256) { state.value=state.value.copy(passwordPrompt=true,issue=RegistrationIssue.CONTEXT); return }
+        resendDraft=""
+        state.value=state.value.copy(passwordPrompt=false)
         password=secret
         val email=state.value.email
         run(resend=true) { ResendVerification(repository)(email,secret,language) }
@@ -72,12 +80,13 @@ class RegistrationViewModel(private val repository: RegistrationRepository, priv
             if(id==generation) {
                 if(resend) {
                     val value=result as ResendResult
+                    if(!value.authorized) password=null
                     state.value=state.value.copy(notice=if(value.authorized) RegistrationNotice.AUTHORIZED_RESEND else RegistrationNotice.GENERIC_RESEND,
                         remaining=value.remaining,waitUntil=value.nextAt,codeVersion=state.value.codeVersion+if(value.authorized) 1 else 0)
-                } else { password=null; state.value=RegistrationUiState(step=RegistrationStep.COMPLETE,email=state.value.email) }
+                } else { password=null; resendDraft=""; state.value=RegistrationUiState(step=RegistrationStep.COMPLETE,email=state.value.email) }
             }
         } catch(e: CancellationException) { throw e } catch(e: RegistrationFailure) { if(id==generation) fail(e,verifying=!resend) }
         finally { if(id==generation) state.value=state.value.copy(busy=false) } }
     }
-    override fun onCleared() { password=null; generation++ }
+    override fun onCleared() { password=null; resendDraft=""; generation++ }
 }

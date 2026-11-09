@@ -1,13 +1,21 @@
 package pe.novatick.anitec.features.auth.presentation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Text
 import androidx.compose.ui.res.stringResource
 import pe.novatick.anitec.R
 import pe.novatick.anitec.features.auth.domain.RegistrationIssue
 
 @Composable
-fun RegistrationFeedback(state: RegistrationUiState) {
+fun RegistrationFeedback(state: RegistrationUiState,compactVerification: Boolean=false,now: Long=System.currentTimeMillis()) {
+    val timedCode=state.errorCode in listOf("RESEND_COOLDOWN","VERIFICATION_RESEND_LIMIT","VERIFICATION_ORIGIN_LIMIT")
+    val deadline=maxOf(state.waitUntil ?: 0,state.verifyWaitUntil ?: 0)
+    val hideTimed=timedCode && deadline>0 && (compactVerification || deadline<=now)
     val error=when(state.issue) {
         RegistrationIssue.PASSWORD_BYTES -> R.string.reg_password_bytes
         RegistrationIssue.PASSWORD_COMPLEXITY -> R.string.reg_password_complexity
@@ -16,7 +24,7 @@ fun RegistrationFeedback(state: RegistrationUiState) {
         RegistrationIssue.OTP -> R.string.reg_otp_error
         RegistrationIssue.CONTEXT -> R.string.reg_context_error
         RegistrationIssue.FIELDS -> R.string.reg_fields_error
-        null -> when(state.errorCode) {
+        null -> when(if(hideTimed) null else state.errorCode) {
             "EMAIL_ALREADY_REGISTERED" -> R.string.reg_existing
             "CODE_EXPIRED" -> R.string.reg_expired
             "CODE_ATTEMPTS_EXCEEDED" -> R.string.reg_attempts
@@ -31,7 +39,7 @@ fun RegistrationFeedback(state: RegistrationUiState) {
             else -> R.string.reg_error
         }
     }
-    error?.let { Text(stringResource(it),color=androidx.compose.material3.MaterialTheme.colorScheme.error) }
+    error?.let { AuthMessage(stringResource(it),isError=true) }
     if(state.fields.isNotEmpty()) {
         val labels=state.fields.map { stringResource(when(it) {
             "name" -> R.string.reg_names
@@ -41,13 +49,24 @@ fun RegistrationFeedback(state: RegistrationUiState) {
             "code" -> R.string.reg_verify
             else -> R.string.reg_fields_error
         }) }
-        Text(labels.joinToString(", "),color=androidx.compose.material3.MaterialTheme.colorScheme.error)
+        AuthMessage(labels.joinToString(", "),isError=true)
     }
-    state.notice?.let { Text(stringResource(when(it) {
+    if(error==null && (!timedCode || (deadline>0 && deadline<=now))) state.notice?.let { AuthMessage(stringResource(when(it) {
         RegistrationNotice.PENDING -> R.string.reg_pending
         RegistrationNotice.GENERIC_RESEND -> R.string.reg_generic_resend
         RegistrationNotice.AUTHORIZED_RESEND -> R.string.reg_authorized_resend
         RegistrationNotice.CHANGE_EMAIL -> R.string.reg_change_notice
     })) }
-    state.remaining?.let { Text(stringResource(R.string.reg_remaining,it)) }
+    if(!compactVerification) state.remaining?.let { AuthMessage(stringResource(R.string.reg_remaining,it)) }
+}
+
+@Composable
+fun AuthMessage(message: String,isError: Boolean=false) {
+    val color=if(isError) androidx.compose.material3.MaterialTheme.colorScheme.error else pe.novatick.anitec.ui.theme.NeutralDark.copy(alpha=0.8f)
+    androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier
+        .fillMaxWidth().padding(top=8.dp)
+        .background(color.copy(alpha=0.05f),androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+        .padding(horizontal=12.dp,vertical=10.dp)) {
+        Text(message,fontFamily=pe.novatick.anitec.ui.theme.Poppins,fontSize=13.sp,lineHeight=20.sp,color=color)
+    }
 }

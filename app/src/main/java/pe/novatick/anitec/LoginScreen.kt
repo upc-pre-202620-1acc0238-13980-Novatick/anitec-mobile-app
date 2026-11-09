@@ -43,6 +43,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import pe.novatick.anitec.features.auth.domain.AuthProblem
 import pe.novatick.anitec.features.auth.presentation.Notice
+import pe.novatick.anitec.features.auth.presentation.AuthMessage
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -322,21 +323,14 @@ fun LoginScreen(
             if(retryLogout) androidx.compose.material3.TextButton(onClick=onRetryLogout,enabled=!busy) {
                 Text(stringResource(R.string.auth_retry_logout))
             }
-            noticeText?.let { Text(it, color = PrimaryGreen) }
+            noticeText?.let { AuthMessage(it) }
             if(problem == AuthProblem.NETWORK) {
                 androidx.compose.material3.TextButton(onClick=onRetryRestore,enabled=!busy) {
                     Text(stringResource(R.string.auth_restore))
                 }
             }
             // Mensaje de error opcional si las credenciales fallan:
-            errorMessage?.let { error ->
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = error,
-                    color = Color.Red,
-                    fontSize = 12.sp
-                )
-            }
+            errorMessage?.let { AuthMessage(it,isError=true) }
 
             Spacer(modifier = Modifier.height(16.dp))
 

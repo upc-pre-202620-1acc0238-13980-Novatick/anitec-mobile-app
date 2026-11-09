@@ -1,27 +1,27 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
     <string name="reg_password_bytes">La contraseña nueva debe ocupar como máximo 72 bytes UTF-8. No se recorta.</string>
     <string name="reg_password_complexity">Usa al menos 8 caracteres, mayúscula, minúscula, número y símbolo.</string>
     <string name="reg_confirmation_error">Las contraseñas no coinciden.</string>
     <string name="reg_terms_error">Debes aceptar los términos para continuar.</string>
     <string name="reg_otp_error">Introduce exactamente seis dígitos del 0 al 9.</string>
-    <string name="reg_context_error">Introduce la contraseña de esta cuenta para reenviar (máximo 256 caracteres).</string>
+    <string name="reg_context_error">Revisa la contraseña (máximo 256 caracteres).</string>
     <string name="reg_fields_error">Revisa nombre, apellidos, correo y campos indicados.</string>
     <string name="reg_existing">Ya existe una cuenta con ese correo. Usa login o continúa la verificación desde login.</string>
     <string name="reg_expired">El código venció. Solicita otro cuando esté disponible.</string>
     <string name="reg_attempts">Este código ya no es utilizable. Solicita otro cuando esté disponible.</string>
     <string name="reg_invalid_code">No se pudo verificar el código. Comprueba los seis dígitos.</string>
-    <string name="reg_wait">Espera antes de solicitar otro código. El servidor decide la disponibilidad.</string>
+    <string name="reg_wait">Espera un momento para volver a intentarlo.</string>
     <string name="reg_not_pending">No se pudo continuar la verificación. Puedes volver a login.</string>
     <string name="reg_unavailable">No se pudo preparar la solicitud de correo. No se confirmó la operación.</string>
     <string name="reg_environment">El entorno no permite esta operación.</string>
     <string name="reg_uncertain">No se pudo confirmar el resultado. No reintentes automáticamente; puedes continuar desde login.</string>
     <string name="reg_error">No se pudo completar la solicitud.</string>
-    <string name="reg_pending">Cuenta pendiente de verificación. La entrega del correo no está confirmada.</string>
-    <string name="reg_generic_resend">Solicitud recibida; no acredita emisión ni entrega de un código. Revisa las credenciales.</string>
-    <string name="reg_authorized_resend">Solicitud de reenvío procesada; entrega de correo no confirmada.</string>
+    <string name="reg_pending">Entrega del correo sin confirmar.</string>
+    <string name="reg_generic_resend">Solicitud recibida; no se confirmó un código nuevo.</string>
+    <string name="reg_authorized_resend">Reenvío solicitado. Entrega sin confirmar.</string>
     <string name="reg_change_notice">Usa otro correo para un nuevo registro. La cuenta anterior no se modifica ni se elimina.</string>
     <string name="reg_remaining">Reenvíos disponibles según el servidor: %1$d</string>
-    <string name="reg_wait_seconds">Espera al menos %1$d s antes de reenviar.</string>
+    <string name="reg_wait_seconds">Reenviar en %1$d s</string>
     <string name="reg_names">Nombres</string>
     <string name="reg_last_names">Apellidos</string>
     <string name="reg_email">Correo electrónico</string>
@@ -34,14 +34,17 @@
     <string name="reg_rancher">Ganadero</string>
     <string name="reg_vet">Veterinario</string>
     <string name="reg_code_prompt">Introduce el código de verificación para</string>
-    <string name="reg_expiry">El código es válido durante 10 minutos desde su emisión.</string>
+    <string name="reg_expiry">Válido 10 minutos desde la emisión.</string>
     <string name="reg_verify_title">Verifica tu\ncorreo</string>
     <string name="reg_verify">Verificar correo</string>
     <string name="reg_no_code">¿No recibiste el código?\u0020</string>
     <string name="reg_resend">Reenviar código</string>
     <string name="reg_change">Usar otro correo (nuevo registro)</string>
-    <string name="reg_resend_password">Contraseña para reenvío (si hace falta)</string>
     <string name="reg_verified">Correo verificado. Inicia sesión para continuar.</string>
     <string name="reg_continue">Continuar verificación</string>
     <string name="reg_title">¡Únete a\nANITEC!</string>
+    <string name="reg_otp_label">Código de verificación, seis dígitos</string>
+    <string name="reg_resend_dialog_title">Confirmar reenvío</string>
+    <string name="reg_resend_dialog_copy">Introduce la contraseña de esta cuenta para solicitar otro código.</string>
+    <string name="reg_cancel">Cancelar</string>
 </resources>

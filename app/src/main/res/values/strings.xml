@@ -22,7 +22,7 @@
     <string name="auth_demo">Funciones de negocio: demostraci贸n sin integraci贸n.</string>
     <string name="auth_demo_register">Registro y verificaci贸n son demostraciones. Debes iniciar sesi贸n con una cuenta habilitada.</string>
     <string name="auth_recovery">Recuperaci贸n no disponible en esta fase.</string>
-    <string name="auth_logout_ok">Sesi贸n cerrada en este dispositivo y revocada en el servidor.</string>
+    <string name="auth_logout_ok">Sesi髇 cerrada y revocada en el servidor.</string>
     <string name="auth_logout_failed">Sesi贸n cerrada localmente; no se pudo confirmar la revocaci贸n remota.</string>
     <string name="auth_restore">Reintentar restauraci贸n</string>
     <string name="auth_logout_incomplete">No pudimos completar el cierre de sesi髇. Reintenta antes de cerrar la aplicaci髇.</string>
