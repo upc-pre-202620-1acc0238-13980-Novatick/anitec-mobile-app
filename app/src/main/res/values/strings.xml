@@ -1,3 +1,31 @@
 <resources>
     <string name="app_name">AniTec</string>
+    <string name="auth_title">Iniciar\nSesión</string>
+    <string name="auth_illustration">Mano sosteniendo celular</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_email_hint">tucorreo@ejemplo.com</string>
+    <string name="auth_password">Contraseña</string>
+    <string name="auth_toggle_password">Mostrar u ocultar contraseña</string>
+    <string name="auth_forgot">Olvidé mi contraseña</string>
+    <string name="auth_remember">Mantener mi sesión iniciada</string>
+    <string name="auth_access">Acceder</string>
+    <string name="auth_loading">Conectando…</string>
+    <string name="auth_signup_prompt">"¿No tienes una cuenta? "</string>
+    <string name="auth_signup">Regístrate</string>
+    <string name="auth_credentials">Correo o contraseña incorrectos, o cuenta no habilitada.</string>
+    <string name="auth_relogin">La sesión ya no es válida. Inicia sesión nuevamente.</string>
+    <string name="auth_forbidden">No tienes autorización para esta operación.</string>
+    <string name="auth_network">No se pudo conectar. No se ha confirmado la autorización. Puedes reintentar.</string>
+    <string name="auth_storage">No se pudo proteger o limpiar la sesión. Revisa el almacenamiento del dispositivo.</string>
+    <string name="auth_invalid_response">Respuesta de autenticación inválida.</string>
+    <string name="auth_server">El servicio no está disponible. Intenta más tarde.</string>
+    <string name="auth_demo">Funciones de negocio: demostración sin integración.</string>
+    <string name="auth_demo_register">Registro y verificación son demostraciones. Debes iniciar sesión con una cuenta habilitada.</string>
+    <string name="auth_recovery">Recuperación no disponible en esta fase.</string>
+    <string name="auth_logout_ok">Sesión cerrada en este dispositivo y revocada en el servidor.</string>
+    <string name="auth_logout_failed">Sesión cerrada localmente; no se pudo confirmar la revocación remota.</string>
+    <string name="auth_restore">Reintentar restauración</string>
+    <string name="auth_logout_incomplete">No pudimos completar el cierre de sesi�n. Reintenta antes de cerrar la aplicaci�n.</string>
+    <string name="auth_logout_remote_only">Cierre confirmado en servidor; limpieza local incompleta. Reintenta.</string>
+    <string name="auth_retry_logout">Reintentar cierre de sesi�n</string>
 </resources>
