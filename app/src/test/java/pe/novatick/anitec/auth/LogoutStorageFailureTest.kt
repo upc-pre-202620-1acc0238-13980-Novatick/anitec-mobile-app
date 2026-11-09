@@ -47,6 +47,9 @@ class LogoutStorageFailureTest {
         @Volatile var logoutCalls = 0
         var gate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
         var revoked = false
+        override suspend fun register(body: RegisterRequest,language: String): Response<Envelope<RegisterDto>> = error("Unexpected registration")
+        override suspend fun verify(body: VerifyRequest): Response<Envelope<Unit>> = error("Unexpected verification")
+        override suspend fun resend(body: ResendRequest,language: String): Response<Envelope<ResendDto>> = error("Unexpected resend")
         override suspend fun login(body: LoginRequest): Response<Envelope<LoginDto>> =
             Response.success(Envelope(true,"ok","2035-01-01T00:00:00Z",
                 LoginDto(account,"test@example.invalid","GANADERO","synthetic-access","synthetic-refresh",30)))

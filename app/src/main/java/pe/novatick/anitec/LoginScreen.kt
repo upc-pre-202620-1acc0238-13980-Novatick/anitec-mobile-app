@@ -67,6 +67,7 @@ fun LoginScreen(
     busy: Boolean,
     problem: AuthProblem?,
     notice: Notice?,
+    onContinueVerification: () -> Unit = {}, unverified: Boolean=false,
     onRetryRestore: () -> Unit,
     onRetryLogout: () -> Unit, logoutBlocked: Boolean, retryLogout: Boolean
 ) {
@@ -92,6 +93,7 @@ fun LoginScreen(
         Notice.REMOTE_LOGOUT_FAILED -> R.string.auth_logout_failed
         Notice.LOGOUT_INCOMPLETE -> R.string.auth_logout_incomplete
         Notice.REMOTE_ONLY -> R.string.auth_logout_remote_only
+        Notice.VERIFIED -> R.string.reg_verified
     }) }
 
     val fieldBackgroundColor = Color(0xFFF3F5F8)
@@ -314,6 +316,9 @@ fun LoginScreen(
                 )
             }
 
+            if(unverified) androidx.compose.material3.TextButton(onClick=onContinueVerification,enabled=!busy) {
+                Text(stringResource(R.string.reg_continue))
+            }
             if(retryLogout) androidx.compose.material3.TextButton(onClick=onRetryLogout,enabled=!busy) {
                 Text(stringResource(R.string.auth_retry_logout))
             }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,7 +43,14 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
+import pe.novatick.anitec.features.auth.presentation.*
+import androidx.compose.material3.TextField
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.testTag
+import kotlinx.coroutines.delay
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -60,19 +69,28 @@ import pe.novatick.anitec.ui.theme.PrimaryGreenAccent
 
 @Composable
 fun VerifyEmailScreen(
-    userEmail: String = "tucorreo@gmail.com",
-    userRole: UserRole = UserRole.GANADERO,
-    onVerifySuccess: (UserRole) -> Unit,
-    onChangeEmailClick: () -> Unit = {},
-    onResendCodeClick: () -> Unit = {}
+    state: RegistrationUiState,
+    onVerify: (String) -> Unit,
+    onChangeEmailClick: () -> Unit,
+    onResend: (String?) -> Unit,
+    onLogin: () -> Unit
 ) {
-    var otpCode by remember { mutableStateOf("") }
+    var otpCode by remember(state.codeVersion,state.email) { mutableStateOf("") }
+    var resendPassword by remember(state.email) { mutableStateOf("") }
+    var clock by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(state.waitUntil,state.verifyWaitUntil) {
+        while(maxOf(state.waitUntil ?: 0,state.verifyWaitUntil ?: 0)>System.currentTimeMillis()) { clock=System.currentTimeMillis(); delay(1000) }
+        clock=System.currentTimeMillis()
+    }
+    val waiting=(state.waitUntil ?: 0)>clock
+    val verifyWaiting=(state.verifyWaitUntil ?: 0)>clock
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .navigationBarsPadding()
+            .imePadding()
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
@@ -87,7 +105,7 @@ fun VerifyEmailScreen(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Verifica tu\ncorreo",
+                text = stringResource(R.string.reg_verify_title),
                 color = Color.White,
                 fontFamily = Poppins,
                 fontWeight = FontWeight.ExtraBold,
@@ -110,7 +128,7 @@ fun VerifyEmailScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Enviamos un código de 6 dígitos a",
+                text = stringResource(R.string.reg_code_prompt),
                 fontFamily = Poppins,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp,
@@ -119,7 +137,7 @@ fun VerifyEmailScreen(
             )
 
             Text(
-                text = userEmail,
+                text = state.email,
                 fontFamily = Poppins,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
@@ -138,21 +156,17 @@ fun VerifyEmailScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             // Texto de expiración
-            val timerString = buildAnnotatedString {
-                withStyle(style = SpanStyle(color = NeutralSlate, fontFamily = Poppins, fontSize = 13.sp)) {
-                    append("El código vence en ")
-                }
-                withStyle(style = SpanStyle(color = PrimaryGreenAccent, fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 13.sp)) {
-                    append("10 minutos")
-                }
-            }
-            Text(text = timerString, textAlign = TextAlign.Center)
+            Text(stringResource(R.string.reg_expiry),textAlign=TextAlign.Center)
+            RegistrationFeedback(state)
+            if(verifyWaiting) Text(stringResource(R.string.reg_wait))
+            if(waiting) Text(stringResource(R.string.reg_wait_seconds,(((state.waitUntil ?: 0)-clock+999)/1000).coerceAtLeast(0)))
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // Botón Verificar correo
             Button(
-                onClick = { onVerifySuccess(userRole) },
+                onClick = { onVerify(otpCode) },
+                enabled = !state.busy && !verifyWaiting && otpCode.length==6,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
@@ -163,7 +177,7 @@ fun VerifyEmailScreen(
                 )
             ) {
                 Text(
-                    text = "Verificar correo",
+                    text = stringResource(R.string.reg_verify),
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
@@ -172,26 +186,30 @@ fun VerifyEmailScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            TextField(value=resendPassword,onValueChange={resendPassword=it},enabled=!state.busy,
+                label={ Text(stringResource(R.string.reg_resend_password)) },singleLine=true,
+                visualTransformation=PasswordVisualTransformation(),modifier=Modifier.fillMaxWidth())
             // Enlace Reenviar Código
             val resendString = buildAnnotatedString {
                 withStyle(style = SpanStyle(color = NeutralSlate, fontFamily = Poppins, fontSize = 13.sp)) {
-                    append("¿No recibiste el código? ")
+                    append(stringResource(R.string.reg_no_code))
                 }
                 withStyle(style = SpanStyle(color = PrimaryGreenAccent, fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 13.sp)) {
-                    append("Reenviar código")
+                    append(stringResource(R.string.reg_resend))
                 }
             }
             Text(
                 text = resendString,
-                modifier = Modifier.clickable { onResendCodeClick() },
+                modifier = Modifier.clickable(enabled=!state.busy && !waiting) { onResend(resendPassword.takeIf { it.isNotEmpty() }); resendPassword="" },
                 textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            androidx.compose.material3.TextButton(onClick=onLogin) { Text(stringResource(R.string.reg_login)) }
             // Enlace Cambiar correo
             Text(
-                text = "Cambiar correo",
+                text = stringResource(R.string.reg_change),
                 fontFamily = Poppins,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
@@ -221,17 +239,20 @@ fun OtpInputField(
     otpText: String,
     onOtpTextChange: (String) -> Unit
 ) {
-    val focusRequesters = remember { List(6) { FocusRequester() } }
+    val focusRequester = remember { FocusRequester() }
 
     BasicTextField(
         value = otpText,
         onValueChange = { newValue ->
-            if (newValue.length <= 6 && newValue.all { it.isDigit() }) {
+            if (newValue.length <= 6 && newValue.all { it in '0'..'9' }) {
                 onOtpTextChange(newValue)
             }
         },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        decorationBox = {
+        modifier=Modifier.testTag("verification_otp").focusRequester(focusRequester),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+        decorationBox = { inner ->
+            Box {
+            Box(Modifier.size(1.dp).alpha(0f)) { inner() }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -244,6 +265,7 @@ fun OtpInputField(
                         modifier = Modifier
                             .weight(1f)
                             .height(82.dp)
+                            .clickable { focusRequester.requestFocus() }
                             .border(
                                 width = 1.5.dp,
                                 color = if (isFocused) PrimaryGreenAccent else Color(0xFF62D28E),
@@ -262,6 +284,7 @@ fun OtpInputField(
                         )
                     }
                 }
+            }
             }
         }
     )

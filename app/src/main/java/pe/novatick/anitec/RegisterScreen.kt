@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -44,7 +45,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
+import pe.novatick.anitec.features.auth.presentation.*
+import pe.novatick.anitec.features.auth.domain.*
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -67,7 +71,8 @@ enum class UserRole {
 
 @Composable
 fun RegisterScreen(
-    onNavigateToVerifyEmail: (UserRole) -> Unit,
+    onSubmit: (RegistrationForm) -> Unit,
+    state: RegistrationUiState,
     onNavigateToLogin: () -> Unit
 ) {
     // Estados de los campos
@@ -90,6 +95,7 @@ fun RegisterScreen(
             .fillMaxSize()
             .background(Color.White)
             .navigationBarsPadding()
+            .imePadding()
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -108,7 +114,7 @@ fun RegisterScreen(
                     .background(PrimaryGreenAccent)
             ) {
                 Text(
-                    text = "¡Únete a\nANITEC!",
+                    text = stringResource(R.string.reg_title),
                     color = Color.White,
                     fontFamily = Poppins,
                     fontWeight = FontWeight.ExtraBold,
@@ -143,41 +149,44 @@ fun RegisterScreen(
                 .padding(horizontal = 24.dp)
         ) {
             // Campo Nombres
-            CustomTextFieldLabel("Nombres")
+            CustomTextFieldLabel(stringResource(R.string.reg_names))
             CustomTextField(
                 value = names,
                 onValueChange = { names = it },
                 placeholder = "Juan Carlos",
+                enabled = !state.busy,
                 backgroundColor = fieldBackgroundColor
             )
 
             Spacer(modifier = Modifier.height(14.dp))
 
             // Campo Apellidos
-            CustomTextFieldLabel("Apellidos")
+            CustomTextFieldLabel(stringResource(R.string.reg_last_names))
             CustomTextField(
                 value = lastNames,
                 onValueChange = { lastNames = it },
                 placeholder = "García Mendoza",
+                enabled = !state.busy,
                 backgroundColor = fieldBackgroundColor
             )
 
             Spacer(modifier = Modifier.height(14.dp))
 
             // Campo Correo electrónico
-            CustomTextFieldLabel("Correo electrónico")
+            CustomTextFieldLabel(stringResource(R.string.reg_email))
             CustomTextField(
                 value = email,
                 onValueChange = { email = it },
                 placeholder = "tucorreo@gmail.com",
                 keyboardType = KeyboardType.Email,
+                enabled = !state.busy,
                 backgroundColor = fieldBackgroundColor
             )
 
             Spacer(modifier = Modifier.height(14.dp))
 
             // Campo Contraseña
-            CustomTextFieldLabel("Contraseña")
+            CustomTextFieldLabel(stringResource(R.string.reg_password))
             CustomTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -185,13 +194,14 @@ fun RegisterScreen(
                 isPassword = true,
                 isPasswordVisible = isPasswordVisible,
                 onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                enabled = !state.busy,
                 backgroundColor = fieldBackgroundColor
             )
 
             Spacer(modifier = Modifier.height(14.dp))
 
             // Campo Confirmar contraseña
-            CustomTextFieldLabel("Confirmar contraseña")
+            CustomTextFieldLabel(stringResource(R.string.reg_confirmation))
             CustomTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
@@ -199,6 +209,7 @@ fun RegisterScreen(
                 isPassword = true,
                 isPasswordVisible = isConfirmPasswordVisible,
                 onTogglePasswordVisibility = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
+                enabled = !state.busy,
                 backgroundColor = fieldBackgroundColor
             )
 
@@ -207,7 +218,7 @@ fun RegisterScreen(
             // 3. SELECTOR ANIMADO: GANADERO vs VETERINARIO
             AnimatedRoleSelector(
                 selectedRole = selectedRole,
-                onRoleSelected = { selectedRole = it }
+                onRoleSelected = { if(!state.busy) selectedRole = it }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -217,11 +228,11 @@ fun RegisterScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { acceptTerms = !acceptTerms }
+                    .clickable(enabled=!state.busy) { acceptTerms = !acceptTerms }
             ) {
                 Checkbox(
                     checked = acceptTerms,
-                    onCheckedChange = { acceptTerms = it },
+                    onCheckedChange = { if(!state.busy) acceptTerms = it },
                     colors = CheckboxDefaults.colors(
                         checkedColor = PrimaryGreenAccent,
                         uncheckedColor = NeutralSlate,
@@ -233,7 +244,7 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.width(10.dp))
 
                 Text(
-                    text = "Términos y condiciones",
+                    text = stringResource(R.string.reg_terms),
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
@@ -243,9 +254,16 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón "Crear cuenta"
+            RegistrationFeedback(state)
+
+            // Botón stringResource(R.string.reg_create)
             Button(
-                onClick = { onNavigateToVerifyEmail(selectedRole) },
+                onClick = {
+                    val form=RegistrationForm(names,lastNames,email,password,confirmPassword,Role.valueOf(selectedRole.name),acceptTerms)
+                    onSubmit(form)
+                    if(runCatching { RegistrationValidation.validate(form) }.isSuccess) { password=""; confirmPassword="" }
+                },
+                enabled = !state.busy,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
@@ -256,7 +274,7 @@ fun RegisterScreen(
                 )
             ) {
                 Text(
-                    text = "Crear cuenta",
+                    text = stringResource(R.string.reg_create),
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp
@@ -272,10 +290,10 @@ fun RegisterScreen(
             ) {
                 val annotatedString = buildAnnotatedString {
                     withStyle(style = SpanStyle(color = PrimaryGreenAccent, fontFamily = Poppins, fontSize = 13.sp)) {
-                        append("¿Ya tienes una cuenta? ")
+                        append(stringResource(R.string.reg_login_prompt))
                     }
                     withStyle(style = SpanStyle(color = PrimaryGreen, fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 13.sp)) {
-                        append("Inicia sesión")
+                        append(stringResource(R.string.reg_login))
                     }
                 }
 
@@ -313,10 +331,12 @@ private fun CustomTextField(
     isPassword: Boolean = false,
     isPasswordVisible: Boolean = false,
     onTogglePasswordVisibility: () -> Unit = {},
+    enabled: Boolean=true,
     backgroundColor: Color
 ) {
     TextField(
         value = value,
+        enabled = enabled,
         onValueChange = onValueChange,
         placeholder = {
             Text(
@@ -401,7 +421,7 @@ private fun AnimatedRoleSelector(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Ganadero",
+                    text = stringResource(R.string.reg_rancher),
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
@@ -421,7 +441,7 @@ private fun AnimatedRoleSelector(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Veterinario",
+                    text = stringResource(R.string.reg_vet),
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,

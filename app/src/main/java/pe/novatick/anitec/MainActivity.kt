@@ -28,22 +28,26 @@ class MainActivity : ComponentActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val vm=ViewModelProvider(this,object: ViewModelProvider.Factory {
+        val provider=ViewModelProvider(this,object: ViewModelProvider.Factory {
             override fun <T: ViewModel> create(modelClass: Class<T>): T {
-                @Suppress("UNCHECKED_CAST")
-                return AuthViewModel(AuthContainer(applicationContext).repository) as T
+                val container=AuthContainer(applicationContext)
+                return requireNotNull(modelClass.cast(if(modelClass==RegistrationViewModel::class.java) RegistrationViewModel(container.registration)
+                    else AuthViewModel(container.repository)))
             }
-        })[AuthViewModel::class.java]
+        })
+        val vm=provider[AuthViewModel::class.java]
+        val registration=provider[RegistrationViewModel::class.java]
         authModel=vm
         enableEdgeToEdge()
-        setContent { AniTecTheme { AniTecAppNavigation(vm) } }
+        setContent { AniTecTheme { AniTecAppNavigation(vm,registration) } }
     }
 }
 
 @Composable
-fun AniTecAppNavigation(vm: AuthViewModel) {
+fun AniTecAppNavigation(vm: AuthViewModel,registration: RegistrationViewModel?=null) {
     val profile by vm.profile.collectAsState()
     val state by vm.uiState.collectAsState()
+    LaunchedEffect(profile?.id) { if(profile!=null) registration?.abandon() }
     var firstPublicEntry by rememberSaveable { mutableStateOf(true) }
     val onLogout: () -> Unit = {
         // Restored identities may never have visited the public splash in this process.
@@ -67,6 +71,21 @@ fun AniTecAppNavigation(vm: AuthViewModel) {
             Box(Modifier.fillMaxSize(),contentAlignment=androidx.compose.ui.Alignment.Center) { CircularProgressIndicator() }
         } else {
             val nav=rememberNavController()
+            val regState=registration?.uiState?.collectAsState()?.value
+            val language=if(androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language=="en") "en" else "es"
+            val backEntry by nav.currentBackStackEntryAsState()
+            LaunchedEffect(backEntry?.destination?.route) {
+                val route=backEntry?.destination?.route
+                if(route!=null && route!="login") vm.clearVerificationContext()
+                if(route!=null && route !in listOf("register","verify_email") && regState?.step!=RegistrationStep.COMPLETE) registration?.abandon()
+            }
+            LaunchedEffect(regState?.step) {
+                when(regState?.step) {
+                    RegistrationStep.VERIFY -> if(nav.currentDestination?.route!="verify_email") nav.navigate("verify_email")
+                    RegistrationStep.COMPLETE -> { registration?.abandon(); vm.notice(Notice.VERIFIED); nav.navigate("login") { popUpTo(nav.graph.id) { inclusive=false } } }
+                    else -> Unit
+                }
+            }
             val publicStart=remember { if(firstPublicEntry) "splash" else "login" }
             NavHost(navController=nav,startDestination=publicStart) {
                 composable("splash") {
@@ -77,15 +96,25 @@ fun AniTecAppNavigation(vm: AuthViewModel) {
                 }
                 composable("login") {
                     LoginScreen(onNavigateToRegister={ nav.navigate("register") },onForgotPasswordClick={ vm.notice(Notice.RECOVERY) },
+                        onContinueVerification={ vm.continueVerification { email,password -> registration?.continueVerification(email,password) } },unverified=state.unverified,
                         onLogin=vm::login,busy=state.busy,problem=state.problem,notice=state.notice,onRetryRestore=vm::restore,onRetryLogout=vm::logout,logoutBlocked=state.logoutBlocked,retryLogout=state.retryLogout)
                 }
-                // Existing registration remains a demo and cannot create an authenticated identity.
+                // Public registration never creates an authenticated identity.
                 composable("register") {
-                    RegisterScreen(onNavigateToVerifyEmail={ nav.navigate("verify_email") },onNavigateToLogin={ nav.popBackStack() })
+                    if(registration!=null && regState!=null) {
+                        androidx.activity.compose.BackHandler { registration.abandon(); if(!nav.popBackStack()) nav.navigate("login") { popUpTo(nav.graph.id) { inclusive=false } } }
+                        RegisterScreen(onSubmit={ registration.register(it,language) },state=regState,
+                            onNavigateToLogin={ registration.abandon(); nav.navigate("login") { popUpTo(nav.graph.id) { inclusive=false } } })
+                    }
                 }
                 composable("verify_email") {
-                    VerifyEmailScreen(onVerifySuccess={ vm.notice(Notice.DEMO); nav.navigate("login") { popUpTo("login") { inclusive=true } } },
-                        onChangeEmailClick={ nav.popBackStack() })
+                    if(registration!=null && regState!=null && regState.step==RegistrationStep.VERIFY) {
+                        androidx.activity.compose.BackHandler { registration.abandon(); nav.navigate("login") { popUpTo(nav.graph.id) { inclusive=false } } }
+                        VerifyEmailScreen(state=regState,onVerify=registration::verify,
+                            onResend={ registration.resend(it,language) },
+                            onChangeEmailClick={ registration.abandon(true); nav.navigate("register") { popUpTo(nav.graph.id) { inclusive=false } } },
+                            onLogin={ registration.abandon(); nav.navigate("login") { popUpTo(nav.graph.id) { inclusive=false } } })
+                    }
                 }
             }
         }
