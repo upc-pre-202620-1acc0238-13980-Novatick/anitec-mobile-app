@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">AniTec</string>
+    <string name="auth_title">Sign\nin</string>
+    <string name="auth_illustration">Hand holding a phone</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_email_hint">you@example.com</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_toggle_password">Show or hide password</string>
+    <string name="auth_forgot">Forgot password</string>
+    <string name="auth_remember">Keep me signed in</string>
+    <string name="auth_access">Sign in</string>
+    <string name="auth_loading">Connecting…</string>
+    <string name="auth_signup_prompt">"Need an account? "</string>
+    <string name="auth_signup">Register</string>
+    <string name="auth_credentials">Incorrect email or password, or account unavailable.</string>
+    <string name="auth_relogin">Your session is no longer valid. Sign in again.</string>
+    <string name="auth_forbidden">You are not authorized for this operation.</string>
+    <string name="auth_network">Could not connect. Authorization has not been confirmed. You can retry.</string>
+    <string name="auth_storage">Could not secure or clear the session. Check device storage.</string>
+    <string name="auth_invalid_response">Invalid authentication response.</string>
+    <string name="auth_server">Service unavailable. Try again later.</string>
+    <string name="auth_demo">Business features: demo without integration.</string>
+    <string name="auth_demo_register">Registration and verification are demos. Sign in with an enabled account.</string>
+    <string name="auth_recovery">Password recovery is unavailable in this phase.</string>
+    <string name="auth_logout_ok">Signed out on this device and revoked on the server.</string>
+    <string name="auth_logout_failed">Signed out locally; remote revocation could not be confirmed.</string>
+    <string name="auth_restore">Retry session restoration</string>
+    <string name="auth_logout_incomplete">Could not complete sign out. Retry before closing the app.</string>
+    <string name="auth_logout_remote_only">Server sign out confirmed; local cleanup incomplete. Retry.</string>
+    <string name="auth_retry_logout">Retry sign out</string>
+</resources>

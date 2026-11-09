@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,6 +40,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import pe.novatick.anitec.features.auth.domain.AuthProblem
+import pe.novatick.anitec.features.auth.presentation.Notice
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -57,36 +61,38 @@ import pe.novatick.anitec.ui.theme.PrimaryGreenAccent
 
 @Composable
 fun LoginScreen(
-    onNavigateToHome: (String) -> Unit,
     onNavigateToRegister: () -> Unit,
-    onForgotPasswordClick: () -> Unit = {}
+    onForgotPasswordClick: () -> Unit = {},
+    onLogin: (String,String,Boolean) -> Unit,
+    busy: Boolean,
+    problem: AuthProblem?,
+    notice: Notice?,
+    onRetryRestore: () -> Unit,
+    onRetryLogout: () -> Unit, logoutBlocked: Boolean, retryLogout: Boolean
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    fun performLogin() {
-        val cleanEmail = email.trim()
-
-        when {
-            // Caso Ganadero
-            cleanEmail.equals("ganadero123@gmail.com", ignoreCase = true) && password == "ganadero123" -> {
-                errorMessage = null
-                onNavigateToHome("home_rancher")
-            }
-            // Caso Veterinario
-            cleanEmail.equals("veterinario123@gmail.com", ignoreCase = true) && password == "veterinario123" -> {
-                errorMessage = null
-                onNavigateToHome("home_veterinarian")
-            }
-            // Credenciales Incorrectas
-            else -> {
-                errorMessage = "Correo o contraseña incorrectos"
-            }
-        }
-    }
+    val errorMessage = problem?.let { stringResource(when(it) {
+        AuthProblem.CREDENTIALS -> R.string.auth_credentials
+        AuthProblem.UNAUTHORIZED, AuthProblem.RELOGIN -> R.string.auth_relogin
+        AuthProblem.FORBIDDEN -> R.string.auth_forbidden
+        AuthProblem.NETWORK -> R.string.auth_network
+        AuthProblem.STORAGE -> R.string.auth_storage
+        AuthProblem.INVALID_RESPONSE -> R.string.auth_invalid_response
+        AuthProblem.SERVER -> R.string.auth_server
+    }) }
+    val signupPrompt=stringResource(R.string.auth_signup_prompt)
+    val signupAction=stringResource(R.string.auth_signup)
+    val noticeText = notice?.let { stringResource(when(it) {
+        Notice.DEMO -> R.string.auth_demo_register
+        Notice.RECOVERY -> R.string.auth_recovery
+        Notice.REMOTE_LOGOUT_OK -> R.string.auth_logout_ok
+        Notice.REMOTE_LOGOUT_FAILED -> R.string.auth_logout_failed
+        Notice.LOGOUT_INCOMPLETE -> R.string.auth_logout_incomplete
+        Notice.REMOTE_ONLY -> R.string.auth_logout_remote_only
+    }) }
 
     val fieldBackgroundColor = Color(0xFFF3F5F8)
 
@@ -95,6 +101,7 @@ fun LoginScreen(
             .fillMaxSize()
             .background(Color.White)
             .navigationBarsPadding()
+            .imePadding()
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -113,7 +120,7 @@ fun LoginScreen(
                     .background(PrimaryGreenAccent)
             ) {
                 Text(
-                    text = "Iniciar\nSesión",
+                    text = stringResource(R.string.auth_title),
                     color = Color.White,
                     fontFamily = Poppins,
                     fontWeight = FontWeight.ExtraBold,
@@ -129,7 +136,7 @@ fun LoginScreen(
             // B. Imagen de la mano con el celular (Superpuesta y pegada a la derecha)
             Image(
                 painter = painterResource(id = R.drawable.login_hands_phone),
-                contentDescription = "Mano sosteniendo celular",
+                contentDescription = stringResource(R.string.auth_illustration),
                 contentScale = ContentScale.FillHeight,
                 modifier = Modifier
                     .height(520.dp)
@@ -150,7 +157,7 @@ fun LoginScreen(
         ) {
             // Campo Email
             Text(
-                text = "Email",
+                text = stringResource(R.string.auth_email),
                 fontFamily = Poppins,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp,
@@ -161,9 +168,10 @@ fun LoginScreen(
             TextField(
                 value = email,
                 onValueChange = { email = it },
+                enabled = !busy,
                 placeholder = {
                     Text(
-                        text = "tucorreo@gmail.com",
+                        text = stringResource(R.string.auth_email_hint),
                         fontFamily = Poppins,
                         color = NeutralSlate,
                         fontSize = 14.sp
@@ -188,7 +196,7 @@ fun LoginScreen(
 
             // Campo Contraseña
             Text(
-                text = "Contraseña",
+                text = stringResource(R.string.auth_password),
                 fontFamily = Poppins,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp,
@@ -199,6 +207,7 @@ fun LoginScreen(
             TextField(
                 value = password,
                 onValueChange = { password = it },
+                enabled = !busy,
                 placeholder = {
                     Text(
                         text = "*************",
@@ -215,7 +224,7 @@ fun LoginScreen(
                     IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                         Icon(
                             painter = painterResource(id = eyeIcon),
-                            contentDescription = "Mostrar u ocultar contraseña",
+                            contentDescription = stringResource(R.string.auth_toggle_password),
                             tint = NeutralSlate,
                             modifier = Modifier.size(22.dp)
                         )
@@ -242,7 +251,7 @@ fun LoginScreen(
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Text(
-                    text = "Olvidé mi contraseña",
+                    text = stringResource(R.string.auth_forgot),
                     fontFamily = Poppins,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
@@ -274,7 +283,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.size(12.dp))
 
                 Text(
-                    text = "Mantener mi sesión iniciada",
+                    text = stringResource(R.string.auth_remember),
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
@@ -286,7 +295,8 @@ fun LoginScreen(
 
             // Botón Acceder
             Button(
-                onClick = { performLogin() },
+                onClick = { onLogin(email,password,rememberMe); password = "" },
+                enabled = !busy && !logoutBlocked && email.isNotBlank() && password.isNotBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
@@ -297,13 +307,22 @@ fun LoginScreen(
                 )
             ) {
                 Text(
-                    text = "Acceder",
+                    text = stringResource(if(busy) R.string.auth_loading else R.string.auth_access),
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp
                 )
             }
 
+            if(retryLogout) androidx.compose.material3.TextButton(onClick=onRetryLogout,enabled=!busy) {
+                Text(stringResource(R.string.auth_retry_logout))
+            }
+            noticeText?.let { Text(it, color = PrimaryGreen) }
+            if(problem == AuthProblem.NETWORK) {
+                androidx.compose.material3.TextButton(onClick=onRetryRestore,enabled=!busy) {
+                    Text(stringResource(R.string.auth_restore))
+                }
+            }
             // Mensaje de error opcional si las credenciales fallan:
             errorMessage?.let { error ->
                 Spacer(modifier = Modifier.height(8.dp))
@@ -323,10 +342,10 @@ fun LoginScreen(
             ) {
                 val annotatedString = buildAnnotatedString {
                     withStyle(style = SpanStyle(color = PrimaryGreenAccent, fontFamily = Poppins, fontSize = 13.sp)) {
-                        append("¿No tienes una cuenta? ")
+                        append(signupPrompt)
                     }
                     withStyle(style = SpanStyle(color = PrimaryGreen, fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 13.sp)) {
-                        append("Regístrate")
+                        append(signupAction)
                     }
                 }
 
