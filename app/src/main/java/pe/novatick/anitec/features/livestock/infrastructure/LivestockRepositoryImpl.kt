@@ -44,4 +44,26 @@ class LivestockRepositoryImpl(private val api: LivestockApi,private val requests
                 id(a.farmId).also { if(filter.farmId!=null && it!=filter.farmId) invalid() },owned(a.ownerId),count(a.version))
         })
     }
+    private fun summary(a: AnimalDto)=AnimalSummary(id(a.id),text(a.code),a.name,text(a.species),id(a.speciesId),
+        AnimalStatus.entries.firstOrNull {it.name==a.status} ?: invalid(),id(a.farmId),owned(a.ownerId),count(a.version))
+    override suspend fun createAnimal(input: NewAnimal): AnimalSummary {
+        val errors=animalInputErrors(input)
+        if(errors.isNotEmpty()) throw AuthFailure(AuthProblem.SERVER,400,"VALIDATION_ERROR",errors.map {it to "invalid"})
+        return mapped {
+            val a=summary(requests.execute {expected(api.createAnimal(it,AnimalDataRequest(input.farmId,input.code?.trim()?.takeIf(String::isNotEmpty),
+                input.speciesId,input.sex.name,input.name?.takeIf(String::isNotBlank),input.breed?.takeIf(String::isNotBlank),input.birthDate,input.photoUrl)),201)})
+            if(a.farmId!=input.farmId || a.speciesId!=input.speciesId || a.status!=AnimalStatus.ACTIVO) invalid()
+            a
+        }
+    }
+    override suspend fun animal(id: String): AnimalDetail = mapped {
+        val d=requests.execute {expected(api.animal(it,this.id(id)))}
+        if(this.id(d.id)!=id) invalid()
+        val farmId=this.id(d.farmId)
+        farm(farmId) // Reuse the owned-farm check: detail does not contain ownerId.
+        AnimalDetail(id,text(d.code),d.name,text(d.species),this.id(d.speciesId),
+            AnimalSex.entries.firstOrNull {it.name==d.sex} ?: invalid(),d.breed,d.birthDate?.also {
+                if("birthDate" in animalInputErrors(NewAnimal(farmId,this.id(d.speciesId),AnimalSex.DESCONOCIDO,birthDate=it))) invalid()
+            },AnimalStatus.entries.firstOrNull {it.name==d.status} ?: invalid(),farmId,text(d.farmName),count(d.version),d.photoUrl)
+    }
 }

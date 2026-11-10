@@ -79,4 +79,25 @@ class LivestockRepositoryTest {
         assertTrue(runCatching {repository.createFarm("Farm",null)}.exceptionOrNull() is AuthFailure)
         assertEquals(1,server.requestCount)
     }
+    @Test fun animalPostOmitsGeneratedCodeAndChecksCreatedIdentity()=runBlocking {
+        val data=com.google.gson.Gson().toJson(mapOf("id" to owner,"code" to "SERVER-1","species" to "Bovino","speciesId" to species,"status" to "ACTIVO","farmId" to farm,"ownerId" to owner,"version" to 0))
+        server.enqueue(response(data,201))
+        val created=repository.createAnimal(NewAnimal(farm,species,AnimalSex.MACHO))
+        assertEquals("SERVER-1",created.code)
+        val request=server.takeRequest()
+        assertEquals("/api/v1/animals",request.path);assertEquals("POST",request.method)
+        val body=com.google.gson.JsonParser.parseString(request.body.readUtf8()).asJsonObject
+        assertEquals(setOf("farmId","speciesId","sex"),body.keySet())
+        server.enqueue(response(data,200))
+        assertEquals(AuthProblem.INVALID_RESPONSE,(runCatching {repository.createAnimal(NewAnimal(farm,species,AnimalSex.HEMBRA))}.exceptionOrNull() as AuthFailure).problem)
+    }
+    @Test fun detailChecksUuidSexVersionAndOwnedFarm()=runBlocking {
+        val data=com.google.gson.Gson().toJson(mapOf("id" to owner,"code" to "SERVER-1","species" to "Bovino","speciesId" to species,
+            "sex" to "HEMBRA","status" to "ACTIVO","farmId" to farm,"farmName" to "Farm","version" to 0))
+        server.enqueue(response(data));server.enqueue(response(farmJson()))
+        assertEquals(AnimalSex.HEMBRA,repository.animal(owner).sex)
+        assertEquals("/api/v1/animals/"+owner,server.takeRequest().path);assertEquals("/api/v1/farms/"+farm,server.takeRequest().path)
+        server.enqueue(response(data));server.enqueue(response(farmJson().replace(owner,species)))
+        assertTrue(runCatching {repository.animal(owner)}.exceptionOrNull() is AuthFailure)
+    }
 }

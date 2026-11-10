@@ -1,0 +1,34 @@
+<resources>
+    <string name="animal_title">Register animal</string>
+    <string name="animal_detail">Animal profile</string>
+    <string name="animal_back">Back</string>
+    <string name="animal_farm">Farm</string>
+    <string name="animal_species">Species</string>
+    <string name="animal_sex">Sex</string>
+    <string name="animal_select">Select</string>
+    <string name="animal_code">Code (optional)</string>
+    <string name="animal_auto">Leave blank: the server generates the code</string>
+    <string name="animal_name">Name (optional)</string>
+    <string name="animal_breed">Breed (optional)</string>
+    <string name="animal_birth">Birth date (optional)</string>
+    <string name="animal_date">YYYY-MM-DD</string>
+    <string name="animal_save">Save animal</string>
+    <string name="animal_invalid">Check this field.</string>
+    <string name="animal_general">General information</string>
+    <string name="animal_unknown">Not provided</string>
+    <string name="animal_male">Male</string>
+    <string name="animal_female">Female</string>
+    <string name="animal_unspecified">Unknown</string>
+    <string name="animal_duplicate">This code is already reserved. Use another one.</string>
+    <string name="animal_limit">No inventory slots available for a new animal.</string>
+    <string name="animal_validation">Check the form fields.</string>
+    <string name="animal_forbidden">You do not have permission for this resource.</string>
+    <string name="animal_missing">The animal is not available.</string>
+    <string name="animal_network">Could not connect. Retry the query.</string>
+    <string name="animal_uncertain">Registration is unconfirmed. Check inventory before starting another registration. It will not be resent automatically.</string>
+    <string name="animal_error">Could not complete the operation.</string>
+    <string name="animal_capacity">Capacity will be checked again before saving.</string>
+    <string name="animal_photo">Placeholder image. Image upload is not available.</string>
+    <string name="animal_pending">Clinical and editing actions are not available in this batch.</string>
+<string name="animal_acknowledge">I checked inventory - Allow a new manual attempt</string>
+</resources>

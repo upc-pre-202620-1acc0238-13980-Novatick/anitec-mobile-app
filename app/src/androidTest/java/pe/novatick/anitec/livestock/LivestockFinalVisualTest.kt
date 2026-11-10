@@ -24,6 +24,8 @@ class LivestockFinalVisualTest {
             compose.runOnIdle {language=lang}
             compose.onNodeWithText("AR").assertIsDisplayed()
             compose.onNodeWithText(text(lang,R.string.ls_register_short)).assertIsEnabled().performClick()
+            compose.onNodeWithText(text(lang,R.string.animal_title)).assertExists()
+            compose.onNodeWithContentDescription(text(lang,R.string.animal_back)).performClick()
             compose.onNodeWithText(text(lang,R.string.ls_invite_vet)).assertIsEnabled().performClick()
             compose.onNodeWithText(text(lang,R.string.ls_open_inventory)).assertDoesNotExist()
             compose.onNodeWithText(text(lang,R.string.ls_visits_neutral)).performScrollTo().assertIsDisplayed()
@@ -35,8 +37,9 @@ class LivestockFinalVisualTest {
             compose.onNodeWithTag("livestock_title").assertIsDisplayed()
             compose.onNodeWithText(text(lang,R.string.ls_animals_pending)).assertDoesNotExist()
             compose.onNodeWithText(text(lang,R.string.ls_register_animal)).assertIsEnabled().performClick()
+            compose.onNodeWithContentDescription(text(lang,R.string.animal_back)).performClick()
             compose.onNodeWithTag("livestock_title").assertIsDisplayed()
-            compose.onNodeWithTag("animal_${java.util.UUID(0L,100L)}").assertHasNoClickAction()
+            compose.onNodeWithTag("animal_${java.util.UUID(0L,100L)}").assertHasClickAction()
             compose.runOnIdle {assertEquals(0,repo.writes)}
         }
     }

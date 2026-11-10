@@ -1,0 +1,34 @@
+<resources>
+    <string name="animal_title">Registrar animal</string>
+    <string name="animal_detail">Ficha del animal</string>
+    <string name="animal_back">Volver</string>
+    <string name="animal_farm">Finca</string>
+    <string name="animal_species">Especie</string>
+    <string name="animal_sex">Sexo</string>
+    <string name="animal_select">Seleccionar</string>
+    <string name="animal_code">Código (opcional)</string>
+    <string name="animal_auto">Vacío: el servidor genera el código</string>
+    <string name="animal_name">Nombre (opcional)</string>
+    <string name="animal_breed">Raza (opcional)</string>
+    <string name="animal_birth">Nacimiento (opcional)</string>
+    <string name="animal_date">AAAA-MM-DD</string>
+    <string name="animal_save">Guardar animal</string>
+    <string name="animal_invalid">Revisa este campo.</string>
+    <string name="animal_general">Datos generales</string>
+    <string name="animal_unknown">Sin información</string>
+    <string name="animal_male">Macho</string>
+    <string name="animal_female">Hembra</string>
+    <string name="animal_unspecified">Desconocido</string>
+    <string name="animal_duplicate">El código ya está reservado. Utiliza otro.</string>
+    <string name="animal_limit">No hay cupos disponibles para registrar animales.</string>
+    <string name="animal_validation">Revisa los campos del formulario.</string>
+    <string name="animal_forbidden">No tienes autorización para este recurso.</string>
+    <string name="animal_missing">El animal no está disponible.</string>
+    <string name="animal_network">No se pudo conectar. Reintenta la consulta.</string>
+    <string name="animal_uncertain">El registro quedó sin confirmar. Revisa el inventario antes de iniciar otro registro. No se reenviará automáticamente.</string>
+    <string name="animal_error">No se pudo completar la operación.</string>
+    <string name="animal_capacity">La capacidad se comprobará nuevamente al guardar.</string>
+    <string name="animal_photo">Foto de referencia. La carga de imágenes no está disponible.</string>
+    <string name="animal_pending">Las acciones clínicas y de edición no están disponibles en este lote.</string>
+<string name="animal_acknowledge">Ya revisé el inventario - Permitir un nuevo intento manual</string>
+</resources>
