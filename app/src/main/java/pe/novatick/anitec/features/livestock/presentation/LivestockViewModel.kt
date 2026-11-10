@@ -70,13 +70,21 @@ class LivestockViewModel(private val repository: LivestockRepository) : ViewMode
     }
     private var animalRead: Job?=null
     private var animalSequence=0L
+    private var localAnimalValidation=false
     fun beginAnimal() {if(!state.value.registering && state.value.animalError?.code!="UNCERTAIN") state.update {it.copy(animalError=null,createdAnimal=null)};refreshFoundation()}
+    /** Only dismiss validation generated locally; backend failures and uncertain writes remain visible. */
+    fun clearCorrectedAnimalInputError(input: NewAnimal) {
+        if(closed || state.value.registering || !localAnimalValidation || animalInputErrors(input).isNotEmpty()) return
+        localAnimalValidation=false
+        state.update {it.copy(animalError=null)}
+    }
     fun acknowledgeAnimalUncertainty() {if(!state.value.registering) state.update {it.copy(animalError=null)}}
     fun consumeAnimal() {state.update {it.copy(createdAnimal=null)}}
     fun createAnimal(input: NewAnimal) {
         if(closed || state.value.registering || state.value.animalError?.code=="UNCERTAIN") return
         val errors=animalInputErrors(input)
-        if(errors.isNotEmpty()) {state.update {it.copy(animalError=AuthFailure(AuthProblem.SERVER,400,"VALIDATION_ERROR",errors.map {it to "invalid"}))};return}
+        if(errors.isNotEmpty()) {localAnimalValidation=true;state.update {it.copy(animalError=AuthFailure(AuthProblem.SERVER,400,"VALIDATION_ERROR",errors.map {it to "invalid"}))};return}
+        localAnimalValidation=false
         state.update {it.copy(registering=true,animalError=null)}
         viewModelScope.launch {
             var sent=false

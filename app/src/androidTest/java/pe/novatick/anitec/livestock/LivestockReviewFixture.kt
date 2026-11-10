@@ -24,6 +24,7 @@ internal class LivestockReviewRepository(val scenario: String="content") : Lives
     private val animals=names.mapIndexed { i,name ->AnimalSummary(uuid(100+i),"ANI-"+(i+1).toString().padStart(6,'0'),name,catalog[i%catalog.size].name,catalog[i%catalog.size].id,
         if(i<12) AnimalStatus.ACTIVO else AnimalStatus.entries[i-11],mutableFarms[if(i<8) 0 else 1].id,owner,0) }.toMutableList()
     private val registered=mutableMapOf<String,AnimalDetail>()
+    val animalReads=mutableListOf<String>()
     override suspend fun createAnimal(input: NewAnimal): AnimalSummary {
         if(animalInputErrors(input).isNotEmpty()) throw AuthFailure(AuthProblem.SERVER,400,"VALIDATION_ERROR")
         if(scenario=="save-uncertain") throw AuthFailure(AuthProblem.NETWORK)
@@ -38,6 +39,7 @@ internal class LivestockReviewRepository(val scenario: String="content") : Lives
         return result
     }
     override suspend fun animal(id: String): AnimalDetail {
+        animalReads+=id
         read("detail")
         return registered[id] ?: animals.firstOrNull {it.id==id}?.let {
             AnimalDetail(it.id,it.code,it.name,it.species,it.speciesId,AnimalSex.DESCONOCIDO,null,null,it.status,it.farmId,mutableFarms.first {f->f.id==it.farmId}.name,it.version,null)

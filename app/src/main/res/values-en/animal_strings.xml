@@ -1,4 +1,14 @@
 <resources>
+    <string name="animal_form_hint">Complete the animal details</string>
+    <string name="animal_preview">Reference image</string>
+    <string name="animal_choose_species">Select a species</string>
+    <string name="animal_choose_date">Choose birth date</string>
+    <string name="animal_more">More options</string>
+    <string name="animal_edit">Edit details</string>
+    <string name="animal_deactivate">Deactivate</string>
+    <string name="animal_not_available">Unavailable\nComing soon</string>
+    <string name="animal_breed_label">Breed</string>
+    <string name="animal_birth_label">Birth date</string>
     <string name="animal_title">Register animal</string>
     <string name="animal_detail">Animal profile</string>
     <string name="animal_back">Back</string>

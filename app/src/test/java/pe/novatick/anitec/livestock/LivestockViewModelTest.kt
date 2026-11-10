@@ -106,4 +106,30 @@ class LivestockViewModelTest {
             assertEquals("new",vm.uiState.value.animalDetailId);vm.close()
         } finally {Dispatchers.resetMain()}
     }
+    @Test fun localValidationDisappearsOnlyWhenEveryInvalidFieldIsCorrected()=runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler));try {
+            val vm=LivestockViewModel(Fake())
+            val invalid=NewAnimal("","",AnimalSex.DESCONOCIDO)
+            vm.createAnimal(invalid)
+            vm.clearCorrectedAnimalInputError(invalid.copy(farmId="22222222-2222-4222-8222-222222222222"))
+            assertEquals("VALIDATION_ERROR",vm.uiState.value.animalError?.code)
+            vm.clearCorrectedAnimalInputError(invalid.copy(farmId="22222222-2222-4222-8222-222222222222",speciesId="33333333-3333-4333-8333-333333333333"))
+            assertNull(vm.uiState.value.animalError);assertNull(vm.uiState.value.createdAnimal);vm.close()
+        } finally {Dispatchers.resetMain()}
+    }
+    @Test fun editingCannotHideBackendValidationOrUncertainPost()=runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler));try {
+            val input=NewAnimal("22222222-2222-4222-8222-222222222222","33333333-3333-4333-8333-333333333333",AnimalSex.DESCONOCIDO)
+            var uncertain=false;var posts=0
+            val fake=object: Fake() {
+                override suspend fun createAnimal(input: NewAnimal):AnimalSummary {posts++;throw if(uncertain) AuthFailure(AuthProblem.NETWORK) else AuthFailure(AuthProblem.SERVER,400,"VALIDATION_ERROR")}
+            }
+            val vm=LivestockViewModel(fake)
+            vm.createAnimal(input);advanceUntilIdle();vm.clearCorrectedAnimalInputError(input.copy(name="Corrected"))
+            assertEquals("VALIDATION_ERROR",vm.uiState.value.animalError?.code)
+            uncertain=true;vm.createAnimal(input);advanceUntilIdle();vm.clearCorrectedAnimalInputError(input.copy(name="Edited"))
+            assertEquals("UNCERTAIN",vm.uiState.value.animalError?.code)
+            vm.createAnimal(input);advanceUntilIdle();assertEquals(2,posts);vm.close()
+        } finally {Dispatchers.resetMain()}
+    }
 }
