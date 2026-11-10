@@ -51,7 +51,9 @@ fun RancherHomeScreen(
     onNavigateToInviteVets: () -> Unit,
     onNavigateToVisits: () -> Unit,
     onNavigateToVisitDetail: () -> Unit,
-    onNavigateToIndicationDetail: () -> Unit
+    onNavigateToIndicationDetail: () -> Unit,
+    profileName: String?=null,
+    livestockContent: (@Composable ()->Unit)?=null
 ) {
     Column(
         modifier = Modifier
@@ -76,7 +78,7 @@ fun RancherHomeScreen(
             ) {
                 Column {
                     Text(
-                        text = "MI FINCA",
+                        text = if(profileName==null) "MI FINCA" else androidx.compose.ui.res.stringResource(R.string.ls_my_farm),
                         fontFamily = Poppins,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
@@ -85,7 +87,7 @@ fun RancherHomeScreen(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Hola, Juan",
+                        text = if(profileName==null) "Hola, Juan" else androidx.compose.ui.res.stringResource(R.string.ls_greeting,profileName),
                         fontFamily = Poppins,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 32.sp,
@@ -93,7 +95,7 @@ fun RancherHomeScreen(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Revisa las novedades de tu ganado",
+                        text = if(profileName==null) "Revisa las novedades de tu ganado" else androidx.compose.ui.res.stringResource(R.string.ls_subtitle),
                         fontFamily = Poppins,
                         fontWeight = FontWeight.Medium,
                         fontSize = 14.sp,
@@ -104,7 +106,7 @@ fun RancherHomeScreen(
                 // Imagen Avatar del Ganadero
                 Image(
                     painter = painterResource(id = R.drawable.profile_rancher_user),
-                    contentDescription = "Foto de perfil Juan",
+                    contentDescription = androidx.compose.ui.res.stringResource(R.string.ls_avatar),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(72.dp)
@@ -115,6 +117,11 @@ fun RancherHomeScreen(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
+
+        if(livestockContent!=null) {
+            Column(Modifier.padding(horizontal=20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) { livestockContent() }
+            return@Column
+        }
 
         // 2. TARJETAS DE MÉTRICAS (Animales Activos y Vet. Vinculados)
         Row(

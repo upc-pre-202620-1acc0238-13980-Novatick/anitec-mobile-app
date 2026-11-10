@@ -1,0 +1,82 @@
+package pe.novatick.anitec.livestock
+import kotlinx.coroutines.runBlocking
+import okhttp3.mockwebserver.*
+import org.junit.*
+import org.junit.Assert.*
+import retrofit2.*
+import retrofit2.converter.gson.GsonConverterFactory
+import pe.novatick.anitec.features.auth.domain.*
+import pe.novatick.anitec.features.auth.infrastructure.Envelope
+import pe.novatick.anitec.core.network.AuthorizedRequests
+import pe.novatick.anitec.features.livestock.domain.*
+import pe.novatick.anitec.features.livestock.infrastructure.*
+class LivestockRepositoryTest {
+    private lateinit var server: MockWebServer
+    private lateinit var repository: LivestockRepository
+    private val owner="11111111-1111-4111-8111-111111111111"
+    private val farm="22222222-2222-4222-8222-222222222222"
+    private val species="33333333-3333-4333-8333-333333333333"
+    private fun response(data: String,status: Int=200)=MockResponse().setResponseCode(status).setBody("""{"success":true,"message":"ok","timestamp":"2035-01-01T00:00:00Z","data":$data}""")
+    private fun farmJson()="""{"id":"$farm","name":"Farm","ownerId":"$owner","createdAt":"2035-01-01T00:00:00.123456Z","location":null}"""
+    @Before fun setup() {
+        server=MockWebServer();server.start()
+        val api=Retrofit.Builder().baseUrl(server.url("api/v1/")).addConverterFactory(GsonConverterFactory.create()).build().create(LivestockApi::class.java)
+        val access=object: AuthorizedRequests {
+            override suspend fun <T> execute(request: suspend (String)->Response<Envelope<T>>): T {
+                val r=request("Bearer synthetic");if(!r.isSuccessful) throw AuthFailure(AuthProblem.SERVER,r.code())
+                return r.body()?.data ?: throw AuthFailure(AuthProblem.INVALID_RESPONSE)
+            }
+        }
+        repository=LivestockRepositoryImpl(api,access) { owner }
+    }
+    @After fun cleanup() { server.shutdown() }
+    @Test fun farmCreationUsesOnlyContractFieldsAndNoOwnerInput()=runBlocking {
+        server.enqueue(response(farmJson(),201));val created=repository.createFarm(" Farm ","")
+        assertEquals(farm,created.id);assertNull(created.location)
+        val req=server.takeRequest();assertEquals("POST",req.method);assertEquals("Bearer synthetic",req.getHeader("Authorization"))
+        val body=com.google.gson.JsonParser.parseString(req.body.readUtf8()).asJsonObject
+        assertEquals(setOf("name"),body.keySet());assertEquals("Farm",body.get("name").asString)
+    }
+    @Test fun farmsValidateOwnerDateAndUuidAndAcceptOptionalLocation()=runBlocking {
+        server.enqueue(response("[${farmJson()}]"));assertEquals(farm,repository.farms().single().id)
+        for(data in listOf(farmJson().replace(owner,farm),farmJson().replace("2035-01-01T00:00:00.123456Z","invalid"),farmJson().replace(farm,"bad"),"null")) {
+            server.enqueue(response("[$data]"));assertTrue(runCatching { repository.farms() }.exceptionOrNull() is AuthFailure)
+        }
+    }
+    @Test fun filtersUseRealUuidAndFarmEndpointWithIndependentTotal()=runBlocking {
+        server.enqueue(response("""{"totalActive":12,"content":[]}"""))
+        val result=repository.inventory(InventoryFilter("A & B",species,AnimalStatus.INACTIVO,farm))
+        assertEquals(12L,result.totalActive);assertEquals(0,result.content.size)
+        val url=server.takeRequest().requestUrl!!;assertEquals("/api/v1/farms/$farm/animals",url.encodedPath)
+        assertEquals(species,url.queryParameter("species"));assertEquals("A & B",url.queryParameter("search"));assertEquals("INACTIVO",url.queryParameter("status"))
+        server.enqueue(response("""{"totalActive":14,"content":[]}"""));repository.inventory(InventoryFilter(status=null))
+        val all=server.takeRequest().requestUrl!!;assertEquals("/api/v1/animals",all.encodedPath);assertNull(all.queryParameter("status"));assertNull(all.queryParameter("farmId"))
+    }
+    @Test fun malformedInventoryNeverDefaultsUnknownStatusOrMissingNumbers()=runBlocking {
+        for(data in listOf("{}","""{"totalActive":-1,"content":[]}""","""{"totalActive":1,"content":[null]}""",
+            """{"totalActive":1,"content":[{"id":"$farm","code":"A","species":"Test","speciesId":"$species","status":"UNKNOWN","farmId":"$farm","ownerId":"$owner","version":0}]}""")) {
+            server.enqueue(response(data));assertTrue(runCatching { repository.inventory(InventoryFilter()) }.exceptionOrNull() is AuthFailure)
+        }
+    }
+    @Test fun capacityIsGlobalAndExcessNeverHidesAnimals()=runBlocking {
+        server.enqueue(response("""{"ownerId":"$owner","allowedAnimals":15,"activeAnimals":16,"lastPlanRevision":9223372036854775806}"""))
+        val v=repository.capacity();assertEquals(0L,v.remaining);assertEquals(16L,v.activeAnimals);assertEquals(9223372036854775806L,v.lastPlanRevision)
+    }
+    @Test fun speciesEmptyIsNotStaticFallbackAndFarmValidationDoesNotSend()=runBlocking {
+        server.enqueue(response("[]"));assertTrue(repository.species().isEmpty());assertEquals(1,server.requestCount)
+        for(name in listOf(" ","x".repeat(151))) assertTrue(runCatching {repository.createFarm(name,null)}.exceptionOrNull() is AuthFailure)
+        assertTrue(runCatching {repository.createFarm("ok","x".repeat(256))}.exceptionOrNull() is AuthFailure);assertEquals(1,server.requestCount)
+    }
+    @Test fun populatedInventoryMapsEachStatusAndMissingOptionalNameWithoutFabrication()=runBlocking {
+        for(status in AnimalStatus.entries) {
+            server.enqueue(response("""{"totalActive":8,"content":[{"id":"$farm","code":"ANI-000001","species":"Actual species","speciesId":"$species","status":"${status.name}","farmId":"$farm","ownerId":"$owner","version":0}]}"""))
+            val animal=repository.inventory(InventoryFilter()).content.single()
+            assertEquals(status,animal.status);assertNull(animal.name);assertEquals(0L,animal.version);assertEquals("ANI-000001",animal.code)
+        }
+    }
+    @Test fun farmCreationDoesNotAcceptWrongSuccessStatus()=runBlocking {
+        server.enqueue(response(farmJson(),200))
+        assertTrue(runCatching {repository.createFarm("Farm",null)}.exceptionOrNull() is AuthFailure)
+        assertEquals(1,server.requestCount)
+    }
+}

@@ -28,9 +28,9 @@ class MainActivity : ComponentActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val container=AuthContainer(applicationContext)
         val provider=ViewModelProvider(this,object: ViewModelProvider.Factory {
             override fun <T: ViewModel> create(modelClass: Class<T>): T {
-                val container=AuthContainer(applicationContext)
                 return requireNotNull(modelClass.cast(if(modelClass==RegistrationViewModel::class.java) RegistrationViewModel(container.registration)
                     else AuthViewModel(container.repository)))
             }
@@ -39,12 +39,12 @@ class MainActivity : ComponentActivity() {
         val registration=provider[RegistrationViewModel::class.java]
         authModel=vm
         enableEdgeToEdge()
-        setContent { AniTecTheme { AniTecAppNavigation(vm,registration) } }
+        setContent { AniTecTheme { AniTecAppNavigation(vm,registration,container.livestock) } }
     }
 }
 
 @Composable
-fun AniTecAppNavigation(vm: AuthViewModel,registration: RegistrationViewModel?=null) {
+fun AniTecAppNavigation(vm: AuthViewModel,registration: RegistrationViewModel?=null,livestock: pe.novatick.anitec.features.livestock.domain.LivestockRepository?=null) {
     val profile by vm.profile.collectAsState()
     val state by vm.uiState.collectAsState()
     LaunchedEffect(profile?.id) { if(profile!=null) registration?.abandon() }
@@ -62,7 +62,7 @@ fun AniTecAppNavigation(vm: AuthViewModel,registration: RegistrationViewModel?=n
                 Text(stringResource(R.string.auth_demo),modifier=Modifier.statusBarsPadding())
                 Box(Modifier.weight(1f)) {
                     when(profile!!.role) {
-                        Role.GANADERO -> RancherMainContainer(onNavigateToLogin=onLogout)
+                        Role.GANADERO -> RancherMainContainer(onNavigateToLogin=onLogout,livestock=livestock,profile=profile)
                         Role.VETERINARIO -> VeterinarianMainContainer(onNavigateToLogin=onLogout)
                     }
                 }
