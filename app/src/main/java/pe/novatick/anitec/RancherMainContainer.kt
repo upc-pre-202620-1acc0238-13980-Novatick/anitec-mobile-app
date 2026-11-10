@@ -17,8 +17,18 @@ import pe.novatick.anitec.ui.navigation.RancherTab
 
 @Composable
 fun RancherMainContainer(
-    onNavigateToLogin: () -> Unit = {}
+    onNavigateToLogin: () -> Unit = {},
+    livestock: pe.novatick.anitec.features.livestock.domain.LivestockRepository?=null,
+    profile: pe.novatick.anitec.features.auth.domain.Profile?=null
 ) {
+    if(livestock!=null && profile!=null) {
+        androidx.compose.runtime.key(profile) {
+            val vm=remember { pe.novatick.anitec.features.livestock.presentation.LivestockViewModel(livestock) }
+            androidx.compose.runtime.DisposableEffect(vm) { vm.start();onDispose { vm.close() } }
+            pe.novatick.anitec.features.livestock.presentation.LivestockShell(vm,profile,onNavigateToLogin)
+        }
+        return
+    }
     var activeTab by remember { mutableStateOf(RancherTab.HOME) }
     var currentScreen by remember { mutableStateOf("home") }
     var selectedAnimalId by remember { mutableStateOf<String?>(null) }

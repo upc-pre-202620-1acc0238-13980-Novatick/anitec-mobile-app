@@ -24,6 +24,11 @@ class AuthContainer(context: Context) {
     val repository: AuthRepositoryImpl = synchronized(AuthContainer::class.java) {
         shared ?: AuthRepositoryImpl(api,KeystoreSessionStore(context.applicationContext)).also { shared=it }
     }
+    val livestock: pe.novatick.anitec.features.livestock.domain.LivestockRepository? = if(BuildConfig.DEBUG) {
+        val privateApi=Retrofit.Builder().baseUrl("http://10.0.2.2:18080/api/v1/").client(client)
+            .addConverterFactory(GsonConverterFactory.create()).build().create(pe.novatick.anitec.features.livestock.infrastructure.LivestockApi::class.java)
+        pe.novatick.anitec.features.livestock.infrastructure.LivestockRepositoryImpl(privateApi,repository) { repository.profile.value?.id }
+    } else null
     companion object { @Volatile private var shared: AuthRepositoryImpl? = null }
 }
 

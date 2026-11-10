@@ -1,0 +1,15 @@
+<resources>
+    <string name="qa_local">QA local</string>
+    <string name="qa_scenarios">Estados de prueba</string>
+    <string name="qa_notice">Solo datos controlados. Cambiar el estado reinicia esta vista; no usa backend.</string>
+    <string name="qa_content">Contenido normal</string>
+    <string name="qa_empty">Sin animales</string>
+    <string name="qa_no_farms">Sin fincas</string>
+    <string name="qa_loading">Consultas en carga</string>
+    <string name="qa_error">Error de lectura</string>
+    <string name="qa_saving">Guardado pendiente (3 segundos)</string>
+    <string name="qa_save_error">Error de guardado</string>
+    <string name="qa_uncertain">Guardado sin confirmar</string>
+    <string name="qa_close">Cerrar</string>
+    <string name="qa_restart">Reiniciar datos de prueba</string>
+</resources>

@@ -1,3 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
-    <application android:networkSecurityConfig="@xml/debug_network_security" />
+    <application android:networkSecurityConfig="@xml/debug_network_security" android:localeConfig="@xml/review_locales_config">
+        <activity android:name=".debug.LivestockReviewActivity" android:exported="true"
+            android:label="ANITEC - QA local" android:theme="@style/Theme.AniTec"
+            android:windowSoftInputMode="adjustResize" />
+    </application>
 </manifest>

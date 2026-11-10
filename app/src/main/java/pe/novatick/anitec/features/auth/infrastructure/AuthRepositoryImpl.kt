@@ -16,7 +16,7 @@ import java.io.IOException
 import java.util.UUID
 
 class AuthRepositoryImpl(private val api: AuthApi, private val store: SessionStore,
-                         private val now: () -> Long = System::currentTimeMillis) : AuthRepository {
+                         private val now: () -> Long = System::currentTimeMillis) : AuthRepository, pe.novatick.anitec.core.network.AuthorizedRequests {
     private val lock = Any()
     private val rotation = Mutex()
     private var epoch = 0L
@@ -129,6 +129,33 @@ class AuthRepositoryImpl(private val api: AuthApi, private val store: SessionSto
         val updated=SessionRecord(pending.accountId,pending.email,pending.role,text(d.accessToken),text(d.refreshToken),expiry(d.expiresIn),pending.persistent,generation=pending.generation)
         synchronized(lock) { checkEpoch(e); persist(updated); session=updated }
     }
+    override suspend fun <T> execute(request: suspend (String)->Response<Envelope<T>>): T = withContext(Dispatchers.IO) { safe {
+        val (initial,e)=synchronized(lock) {
+            if(closing!=null || identity.value==null) throw AuthFailure(AuthProblem.RELOGIN)
+            (session ?: throw AuthFailure(AuthProblem.RELOGIN)) to epoch
+        }
+        try {
+            var current=initial
+            if(current.pendingId!=null || current.expiresAt<=now()) {
+                rotate(current,e)
+                current=synchronized(lock) { checkEpoch(e);session ?: throw AuthFailure(AuthProblem.RELOGIN) }
+            }
+            val value=try { body(request("Bearer ${current.access}")) } catch(f: AuthFailure) {
+                synchronized(lock) { checkEpoch(e) }
+                if(f.status!=401 || f.code!="ACCESS_TOKEN_EXPIRED") throw f
+                rotate(current,e)
+                val renewed=synchronized(lock) { checkEpoch(e);session ?: throw AuthFailure(AuthProblem.RELOGIN) }
+                body(request("Bearer ${renewed.access}"))
+            }
+            synchronized(lock) { checkEpoch(e);value }
+        } catch(f: AuthFailure) {
+            synchronized(lock) {
+                checkEpoch(e)
+                if(f.status==401 || f.problem==AuthProblem.RELOGIN) logoutLocally()
+            }
+            throw f
+        }
+    } }
     override fun logoutLocally(): suspend () -> LogoutResult {
         val target = synchronized(lock) {
             val target = closing ?: Closing(session?.refresh).also { closing=it }

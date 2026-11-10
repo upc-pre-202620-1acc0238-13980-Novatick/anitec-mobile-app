@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Official ANITEC Figma 104:2201; original geometry preserved. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="20dp" android:height="20dp" android:viewportWidth="20" android:viewportHeight="20">
+  <path android:pathData="M10 4.16667V10M10 10V15.8333M10 10H4.16667M10 10H15.8333" android:fillColor="#00000000" android:strokeColor="#FFFFFF" android:strokeWidth="1.5" android:strokeLineCap="round" android:strokeLineJoin="round" />
+</vector>

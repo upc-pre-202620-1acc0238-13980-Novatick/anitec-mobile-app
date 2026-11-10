@@ -55,8 +55,14 @@ import pe.novatick.anitec.ui.theme.PrimaryGreenAccent
 @Composable
 fun RancherCattleScreen(
     onNavigateToRegisterAnimal: () -> Unit,
-    onNavigateToAnimalDetail: (String) -> Unit
+    onNavigateToAnimalDetail: (String) -> Unit,
+    liveState: pe.novatick.anitec.features.livestock.presentation.LivestockState?=null,
+    livestock: pe.novatick.anitec.features.livestock.presentation.LivestockViewModel?=null
 ) {
+    if(liveState!=null && livestock!=null) {
+        pe.novatick.anitec.features.livestock.presentation.LivestockInventoryScreen(liveState,livestock)
+        return
+    }
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(AnimalCategory.ALL) }
 
