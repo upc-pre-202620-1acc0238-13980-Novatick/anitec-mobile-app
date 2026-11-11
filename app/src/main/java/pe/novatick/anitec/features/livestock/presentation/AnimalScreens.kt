@@ -41,7 +41,7 @@ import pe.novatick.anitec.ui.theme.Poppins
         }
     }
 }
-@Composable private fun AnimalPage(title: String,back: ()->Unit,busy: Boolean=false,subtitle: String?=null,
+@Composable internal fun AnimalPage(title: String,back: ()->Unit,busy: Boolean=false,subtitle: String?=null,
     centered: Boolean=false,actions: (@Composable ()->Unit)?=null,content: @Composable ColumnScope.()->Unit) {
     BackHandler(busy) {}
     Column(Modifier.fillMaxSize().background(Color.White).imePadding().verticalScroll(rememberScrollState())) {
@@ -61,7 +61,7 @@ import pe.novatick.anitec.ui.theme.Poppins
         }
     }
 }
-@Composable private fun AnimalSelect(label: String,value: String,choices: List<Pair<String,String>>,enabled: Boolean,tag: String,onSelect: (String)->Unit) {
+@Composable internal fun AnimalSelect(label: String,value: String,choices: List<Pair<String,String>>,enabled: Boolean,tag: String,onSelect: (String)->Unit) {
     var expanded by remember {mutableStateOf(false)}
     Column(verticalArrangement=Arrangement.spacedBy(6.dp)) {
         LsText(label,size=12)
@@ -80,7 +80,7 @@ import pe.novatick.anitec.ui.theme.Poppins
         }
     }
 }
-@Composable private fun AnimalField(value: String,onChange: (String)->Unit,label: String,help: String,tag: String,errorText: String?,
+@Composable internal fun AnimalField(value: String,onChange: (String)->Unit,label: String,help: String,tag: String,errorText: String?,
     enabled: Boolean=true,trailing: (@Composable ()->Unit)?=null) {
     var focused by remember {mutableStateOf(false)}
     Column(verticalArrangement=Arrangement.spacedBy(6.dp)) {
@@ -101,7 +101,7 @@ import pe.novatick.anitec.ui.theme.Poppins
     }
 }
 /** Native accessible picker complements the editable ISO field; civil values never pass through UTC conversion. */
-@Composable private fun AnimalBirthField(value: String,onChange: (String)->Unit,error: String?,enabled: Boolean) {
+@Composable internal fun AnimalBirthField(value: String,onChange: (String)->Unit,error: String?,enabled: Boolean) {
     val host=LocalView.current.context
     val configuration=LocalConfiguration.current
     val context=remember(host,configuration) {android.view.ContextThemeWrapper(host,R.style.Theme_AniTec).apply {applyOverrideConfiguration(configuration)}}
@@ -197,38 +197,45 @@ import pe.novatick.anitec.ui.theme.Poppins
             enabled=!state.saving && state.saveError!="UNCERTAIN" && farmName.isNotBlank() && farmName.length<=150 && farmLocation.length<=255)
     })
 }
-@Composable private fun AnimalSpeciesImage(species: String,photoUrl: String?=null) {
-    Box(Modifier.size(73.dp).background(LivestockVisuals.Mint,RoundedCornerShape(24.dp)),contentAlignment=Alignment.Center) {
+@Composable internal fun AnimalSpeciesImage(species: String,photoUrl: String?=null,edge: Int=73) {
+    Box(Modifier.size(edge.dp).background(LivestockVisuals.Mint,RoundedCornerShape(24.dp)),contentAlignment=Alignment.Center) {
         val placeholder=painterResource(livestockSpeciesIcon(species))
         val remote=photoUrl?.takeIf {url->runCatching {val uri=java.net.URI(url);uri.scheme=="https" && uri.host!=null && uri.userInfo==null}.getOrDefault(false)}
-        if(remote!=null) AsyncImage(model=remote,contentDescription=null,placeholder=placeholder,error=placeholder,modifier=Modifier.size(53.dp))
-        else Icon(placeholder,null,Modifier.size(53.dp),tint=Color.Unspecified)
+        if(remote!=null) AsyncImage(model=remote,contentDescription=null,placeholder=placeholder,error=placeholder,modifier=Modifier.size((edge-20).dp))
+        else Icon(placeholder,null,Modifier.size((edge-20).dp),tint=Color.Unspecified)
     }
 }
-@Composable private fun AnimalOptions() {
+@Composable private fun AnimalOptions(enabled: Boolean,canDeactivate: Boolean,onEdit: ()->Unit,onDeactivate: ()->Unit) {
     var expanded by remember {mutableStateOf(false)}
     Box {
-        AnimalNavigationButton(R.drawable.animal_more_official,stringResource(R.string.animal_more)) {expanded=true}
-        DropdownMenu(expanded,{expanded=false},modifier=Modifier.width(204.dp).testTag("animal_options"),
-            shape=RoundedCornerShape(14.dp),containerColor=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border),
-            properties=PopupProperties(focusable=true)) {
-            val options=listOf(Triple(R.string.animal_edit,R.drawable.animal_edit_official,false),Triple(R.string.animal_deactivate,R.drawable.animal_deactivate_official,true))
-            options.forEachIndexed {index,(label,icon,destructive) ->
-                if(index>0) HorizontalDivider(color=LivestockVisuals.Border)
-                // No callback, route, mutation or confirmation dialog exists until 3C.
-                DropdownMenuItem(onClick={},enabled=false,modifier=Modifier.testTag(if(destructive) "animal_deactivate" else "animal_edit"),
-                    leadingIcon={Icon(painterResource(icon),null,Modifier.size(16.dp),tint=Color.Unspecified)},
-                    text={Column(verticalArrangement=Arrangement.spacedBy(3.dp)) {
-                        LsText(stringResource(label),size=12,color=if(destructive) Color(0xFFDF6262) else LivestockVisuals.Ink)
-                        LsText(stringResource(R.string.animal_not_available),size=10,color=LivestockVisuals.Secondary)
-                    }})
-            }
+        AnimalNavigationButton(R.drawable.animal_more_official,stringResource(R.string.animal_more),enabled) {expanded=true}
+        val offset=with(androidx.compose.ui.platform.LocalDensity.current) {48.dp.roundToPx()}
+        if(expanded) androidx.compose.ui.window.Popup(alignment=Alignment.TopEnd,offset=androidx.compose.ui.unit.IntOffset(0,offset),
+            onDismissRequest={expanded=false},properties=PopupProperties(focusable=true)) {
+            Surface(Modifier.width(152.dp).testTag("animal_options"),shape=RoundedCornerShape(14.dp),color=Color.White,
+                border=BorderStroke(1.dp,LivestockVisuals.Border),shadowElevation=12.dp) { Column {
+            DropdownMenuItem(onClick={expanded=false;onEdit()},enabled=enabled,modifier=Modifier.height(40.dp).testTag("animal_edit"),contentPadding=PaddingValues(horizontal=15.dp),
+                leadingIcon={Icon(painterResource(R.drawable.animal_edit_official),null,Modifier.size(16.dp),tint=Color.Unspecified)},
+                text={LsText(stringResource(R.string.animal_edit),size=10)})
+            HorizontalDivider(color=LivestockVisuals.Border)
+            DropdownMenuItem(onClick={expanded=false;onDeactivate()},enabled=enabled && canDeactivate,modifier=Modifier.height(40.dp).testTag("animal_deactivate"),contentPadding=PaddingValues(horizontal=15.dp),
+                leadingIcon={Icon(painterResource(R.drawable.animal_deactivate_official),null,Modifier.size(16.dp),tint=Color.Unspecified)},
+                text={LsText(stringResource(R.string.animal_deactivate),size=10,color=Color(0xFFDF6262))})
+            } }
         }
     }
 }
-@Composable fun AnimalDetailScreen(state: LivestockState,back: ()->Unit,retry: ()->Unit) {
+@Composable fun AnimalDetailScreen(state: LivestockState,back: ()->Unit,retry: ()->Unit,
+    edit: ()->Unit={},deactivate: (AnimalDetail)->Unit={},reloadMutation: ()->Unit={},consumeMutation: ()->Unit={}) {
+    var confirm by remember(state.animalDetailId) {mutableStateOf(false)}
+    LaunchedEffect(state.mutation.completed) {if(state.mutation.completed=="DEACTIVATE") confirm=false}
+    val current=state.animalDetail.value
+    if(confirm && current!=null) AnimalDeactivationDialog(current,state.mutation,{if(!state.mutation.busy) confirm=false},{deactivate(current)})
+    BackHandler(state.mutation.busy) {}
     AnimalPage(state.animalDetail.value?.let {it.name?.takeIf(String::isNotBlank) ?: it.code} ?: stringResource(R.string.animal_detail),back,
-        subtitle=state.animalDetail.value?.let {it.code+" · "+it.species},centered=true,actions=if(state.animalDetail.value!=null) {{AnimalOptions()}} else null) {
+        subtitle=state.animalDetail.value?.let {it.code+" · "+it.species},centered=true,busy=state.mutation.busy,actions=if(state.animalDetail.value!=null) {{AnimalOptions(!state.mutation.busy,state.animalDetail.value.status==AnimalStatus.ACTIVO,edit) {consumeMutation();confirm=true}}} else null) {
+        state.mutation.error?.let {LsNotice(animalMutationFailureText(it),true);LsAction(stringResource(R.string.animal_reload),reloadMutation)}
+        if(state.mutation.completed=="DEACTIVATE") LsNotice(stringResource(R.string.animal_deactivated))
         if(state.animalDetail.loading) LsLoading(stringResource(R.string.ls_loading))
         state.animalDetailError?.let {LsNotice(animalFailureText(it),true);LsAction(stringResource(R.string.ls_retry),retry)}
         state.animalDetail.value?.let {animal ->

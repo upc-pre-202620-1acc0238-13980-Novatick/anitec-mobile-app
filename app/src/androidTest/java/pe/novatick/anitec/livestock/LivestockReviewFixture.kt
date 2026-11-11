@@ -38,6 +38,35 @@ internal class LivestockReviewRepository(val scenario: String="content") : Lives
         registered[result.id]=AnimalDetail(result.id,code,input.name,species.name,species.id,input.sex,input.breed,input.birthDate,result.status,farm.id,farm.name,0,null)
         return result
     }
+    var mutationWrites=0
+    override suspend fun updateAnimal(id: String,input: AnimalEdit): AnimalSummary {
+        mutationWrites++
+        if(scenario=="saving") kotlinx.coroutines.delay(2500)
+        if(scenario=="save-uncertain") throw AuthFailure(AuthProblem.NETWORK)
+        if(scenario=="edit-conflict") throw AuthFailure(AuthProblem.SERVER,409,"ANIMAL_VERSION_CONFLICT")
+        if(scenario=="save-error") throw AuthFailure(AuthProblem.SERVER,409,"DUPLICATE_ANIMAL_CODE")
+        val old=animal(id)
+        if(old.version!=input.version) throw AuthFailure(AuthProblem.SERVER,409,"ANIMAL_VERSION_CONFLICT")
+        if(animals.any {it.id!=id && it.code.equals(input.code.trim(),true)}) throw AuthFailure(AuthProblem.SERVER,409,"DUPLICATE_ANIMAL_CODE")
+        val species=catalog.first {it.id==input.speciesId}
+        val detail=old.copy(code=input.code.trim().uppercase(),name=input.name,species=species.name,speciesId=species.id,
+            sex=input.sex,breed=input.breed,birthDate=input.birthDate,photoUrl=input.photoUrl,version=old.version+1)
+        registered[id]=detail
+        val i=animals.indexOfFirst {it.id==id}
+        val result=animals[i].copy(code=detail.code,name=detail.name,species=detail.species,speciesId=detail.speciesId,version=detail.version)
+        animals[i]=result;return result
+    }
+    override suspend fun deactivateAnimal(id: String): AnimalDeactivation {
+        mutationWrites++
+        if(scenario=="saving") kotlinx.coroutines.delay(2500)
+        if(scenario=="save-uncertain") throw AuthFailure(AuthProblem.NETWORK)
+        if(scenario=="save-error") throw AuthFailure(AuthProblem.SERVER,403,"FORBIDDEN")
+        val old=animal(id)
+        registered[id]=old.copy(status=AnimalStatus.INACTIVO,version=old.version+1)
+        val i=animals.indexOfFirst {it.id==id}
+        animals[i]=animals[i].copy(status=AnimalStatus.INACTIVO,version=old.version+1)
+        return AnimalDeactivation(id,AnimalStatus.INACTIVO)
+    }
     override suspend fun animal(id: String): AnimalDetail {
         animalReads+=id
         read("detail")

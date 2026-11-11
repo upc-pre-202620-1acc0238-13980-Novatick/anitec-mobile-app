@@ -100,4 +100,28 @@ class LivestockRepositoryTest {
         server.enqueue(response(data));server.enqueue(response(farmJson().replace(owner,species)))
         assertTrue(runCatching {repository.animal(owner)}.exceptionOrNull() is AuthFailure)
     }
+
+    @Test fun updateUsesPutSnapshotVersionAndPreservesOptionalPhotoWithoutFarmMutation()=runBlocking {
+        val id="44444444-4444-4444-8444-444444444444"
+        val input=AnimalEdit(" BOV-024 ",species,AnimalSex.HEMBRA,"Luna","Holstein","2021-03-12","https://example.invalid/photo.png",7)
+        val json="""{"id":"$id","code":"BOV-024","name":"Luna","species":"Bovino","speciesId":"$species","status":"ACTIVO","farmId":"$farm","ownerId":"$owner","version":8}"""
+        server.enqueue(response(json));val result=repository.updateAnimal(id,input)
+        assertEquals(8L,result.version);val req=server.takeRequest();assertEquals("PUT",req.method);assertEquals("/api/v1/animals/$id",req.path)
+        val body=com.google.gson.JsonParser.parseString(req.body.readUtf8()).asJsonObject
+        assertEquals(setOf("code","speciesId","sex","name","breed","birthDate","photoUrl","version"),body.keySet())
+        assertEquals(7L,body.get("version").asLong);assertEquals(input.photoUrl,body.get("photoUrl").asString);assertEquals("BOV-024",body.get("code").asString)
+        assertEquals("Holstein",body.get("breed").asString);assertFalse(body.has("farmId"));assertFalse(body.has("ownerId"))
+    }
+    @Test fun softDeactivationUsesExistingDeleteWithoutInventedVersionQueryOrBody()=runBlocking {
+        val id="44444444-4444-4444-8444-444444444444"
+        server.enqueue(response("""{"id":"$id","status":"INACTIVO"}"""))
+        assertEquals(AnimalStatus.INACTIVO,repository.deactivateAnimal(id).status)
+        val req=server.takeRequest();assertEquals("DELETE",req.method);assertEquals("/api/v1/animals/$id",req.path);assertEquals(0L,req.bodySize)
+    }
+    @Test fun deactivationRejectsWrongIdentityOrNonInactiveSuccess()=runBlocking {
+        val id="44444444-4444-4444-8444-444444444444"
+        for(json in listOf("""{"id":"$farm","status":"INACTIVO"}""","""{"id":"$id","status":"ACTIVO"}""")) {
+            server.enqueue(response(json));val e=runCatching {repository.deactivateAnimal(id)}.exceptionOrNull();assertTrue(e is AuthFailure)
+        }
+    }
 }

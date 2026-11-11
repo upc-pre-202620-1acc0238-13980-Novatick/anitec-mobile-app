@@ -1,0 +1,16 @@
+<resources>
+    <string name="animal_edit_code">Código *</string>
+    <string name="animal_take_photo">Tomar foto</string>
+    <string name="animal_upload_photo">Subir foto</string>
+    <string name="animal_generate">Generar código</string>
+    <string name="animal_generation_unavailable">La generación automática solo está disponible al registrar.</string>
+    <string name="animal_preserved_farm">Finca: %1$s. Se conserva al editar.</string>
+    <string name="animal_code_unique">El código debe ser único dentro de tu inventario.</string>
+    <string name="animal_save_changes">Guardar cambios</string>
+    <string name="animal_reload">Recargar datos y revisar</string>
+    <string name="animal_conflict">El animal cambió. Recarga y revisa los datos antes de volver a editar. No se sobrescribió el cambio.</string>
+    <string name="animal_mutation_uncertain">No se pudo confirmar el resultado. Recarga los datos antes de decidir un nuevo intento; no se reenviará automáticamente.</string>
+    <string name="animal_deactivated">Animal dado de baja. Se conserva su historial.</string>
+    <string name="animal_deactivate_title">Dar de baja a %1$s</string>
+    <string name="animal_deactivate_explanation">El animal saldrá del inventario activo. Su historial, atenciones y observaciones se conservarán y podrán consultarse en cualquier momento.</string>
+</resources>
