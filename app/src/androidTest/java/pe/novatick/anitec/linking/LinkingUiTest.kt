@@ -26,7 +26,7 @@ class LinkingUiTest {
      val vm=remember {LinkingViewModel(repo,if(screen in listOf("invite","vets"))Role.GANADERO else Role.VETERINARIO)}
      DisposableEffect(vm){vm.refresh();onDispose{vm.close()}}
      when(screen){"invite"->InviteVetScreen(vm){};"vets"->RancherLinksScreen(vm){};"farmers"->VeterinarianFarmersScreen(vm,{},{})
-      "detail"->LinkedFarmerDetailScreen(vm,DebugLinkingRepository.FARMER){};else->VeterinarianInvitationsScreen(vm){}}
+      "detail"->LinkedFarmerDetailScreen(vm,DebugLinkingRepository.FARMER,{},{});else->VeterinarianInvitationsScreen(vm){}}
     }
    }
   }
@@ -46,5 +46,27 @@ class LinkingUiTest {
  @Test fun revokeRequiresConfirmationAndUpdatesList(){open(screen="vets");compose.onNodeWithText("Quitar").performClick();Assert.assertTrue(repo.accepted);compose.onNodeWithText("Cancelar").performClick();Assert.assertTrue(repo.accepted);compose.onNodeWithText("Quitar").performClick();compose.onAllNodesWithText("Quitar").onLast().performClick();compose.onNodeWithText("Aún no hay vinculaciones activas.").assertExists();Assert.assertFalse(repo.accepted)}
  @Test fun queryFailureDoesNotPretendEmpty(){open(scenario="error",screen="farmers");compose.onNodeWithText("No hay invitaciones pendientes.").assertDoesNotExist();compose.onNodeWithText("Aún no hay vinculaciones activas.").assertDoesNotExist()}
  @Test fun farmerSearchFiltersLocally(){open(screen="farmers");compose.onNodeWithTag("link_search").performTextInput("absent");compose.onNodeWithText("No hay coincidencias.").assertExists()}
- @Test fun detailShowsOnlyAuthorizedCountsAndNoUnlink(){open(screen="detail");compose.onNodeWithText("Fundo Los Álamos").assertExists();compose.onNodeWithText("Desvincular").assertDoesNotExist();compose.onNodeWithText("12 animales").assertExists()}
+ @Test fun detailShowsActualLocationAndAnimalsEntryWithoutUnlink(){open(screen="detail");compose.onNodeWithText("Fundo Los Álamos").assertExists();compose.onNodeWithText("Desvincular").assertDoesNotExist();compose.onNodeWithText("Camino norte, junto al portón").assertExists();compose.onNodeWithTag("linked_view_animals").assertExists()}
+ @Test fun veterinarianCanNavigateFromFarmerToReadOnlyAnimalAndBack(){
+  val repo=DebugLinkingRepository()
+  compose.setContent {AniTecTheme {VeterinaryLinkingShell(repo,Profile(DebugLinkingRepository.VET,"qa@example.invalid","María","López",Role.VETERINARIO)) {}}}
+  compose.onNodeWithText("Luis Martínez").performScrollTo().performClick()
+  compose.onNodeWithTag("linked_view_animals").performScrollTo().performClick()
+  compose.onNodeWithText("Luna").performScrollTo().performClick()
+  compose.onNodeWithTag("animal_header_title").assertTextContains("Luna")
+  compose.onNodeWithTag("animal_edit").assertDoesNotExist();compose.onNodeWithTag("animal_deactivate").assertDoesNotExist()
+  compose.onNodeWithContentDescription(InstrumentationRegistry.getInstrumentation().targetContext.getString(pe.novatick.anitec.R.string.animal_more)).assertDoesNotExist()
+  compose.onNodeWithContentDescription(InstrumentationRegistry.getInstrumentation().targetContext.getString(pe.novatick.anitec.R.string.animal_back)).performClick()
+  compose.onNodeWithText("Luna").assertExists()
+ }
+
+ @Test fun ownerStillHasEditAndDeactivateActions(){
+  compose.setContent {pe.novatick.anitec.livestock.LivestockLocaleFixture("es",pe.novatick.anitec.livestock.LivestockReviewRepository())}
+  val context=InstrumentationRegistry.getInstrumentation().targetContext
+  compose.onNodeWithText(context.getString(pe.novatick.anitec.R.string.ls_tab_cattle)).performClick()
+  compose.onNodeWithText("Luna").performScrollTo().performClick()
+  compose.onNodeWithContentDescription(context.getString(pe.novatick.anitec.R.string.animal_more)).performClick()
+  compose.onNodeWithTag("animal_edit").assertIsEnabled();compose.onNodeWithTag("animal_deactivate").assertIsEnabled()
+ }
+
 }

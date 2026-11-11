@@ -28,6 +28,6 @@ class AuthContainer(context: Context) {
     val livestock = pe.novatick.anitec.features.livestock.infrastructure.LivestockRepositoryImpl(
         retrofit.create(pe.novatick.anitec.features.livestock.infrastructure.LivestockApi::class.java),repository) {repository.profile.value?.id}
     val linking = pe.novatick.anitec.features.linking.infrastructure.LinkingRepositoryImpl(
-        retrofit.create(pe.novatick.anitec.features.linking.infrastructure.LinkingApi::class.java),repository) {repository.profile.value}
+        retrofit.create(pe.novatick.anitec.features.linking.infrastructure.LinkingApi::class.java),repository,retrofit.create(pe.novatick.anitec.features.livestock.infrastructure.LivestockApi::class.java)) {repository.profile.value}
     companion object { @Volatile private var shared: AuthRepositoryImpl? = null }
 }

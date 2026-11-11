@@ -52,10 +52,10 @@ internal object VariantAccess {
         if(ready && !edit) {
             Column(Modifier.fillMaxSize()) {
                 Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal=12.dp),horizontalArrangement=Arrangement.SpaceBetween) {
-                    Text(stringResource(R.string.staging_internal_label),Modifier.weight(1f).padding(top=12.dp))
-                    TextButton(onClick={edit=true}) {Text(stringResource(R.string.staging_access))}
+                    Text(stringResource(R.string.staging_internal_label),Modifier.weight(1f),style=MaterialTheme.typography.labelSmall)
+                    TextButton(onClick={edit=true},contentPadding=PaddingValues(horizontal=8.dp,vertical=0.dp),modifier=Modifier.height(36.dp)) {Text(stringResource(R.string.staging_access))}
                 }
-                Box(Modifier.weight(1f)) {content()}
+                Box(Modifier.weight(1f).consumeWindowInsets(WindowInsets.statusBars)) {content()}
             }
         } else {
             var draft by remember {mutableStateOf("")}

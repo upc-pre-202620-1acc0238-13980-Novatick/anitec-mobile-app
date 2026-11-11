@@ -71,4 +71,20 @@
     <item quantity="one">%1$d farm</item>
     <item quantity="other">%1$d farms</item>
   </plurals>
+  <string name="lk_outgoing_unavailable">Sent invitations cannot be retrieved from this screen.</string>
+  <string name="lk_capacity_label">Plan capacity: %1$d / %2$d farmers</string>
+  <string name="lk_access_active">Active access</string>
+  <string name="lk_establishment">Farm or establishment</string>
+  <string name="lk_view_animals">View animals</string>
+  <string name="lk_their_animals">Their animals</string>
+  <string name="lk_no_animals">No animals match this query.</string>
+  <string name="lk_all_species">All</string>
+  <plurals name="lk_link_count">
+    <item quantity="one">%1$d linked</item>
+    <item quantity="other">%1$d linked</item>
+  </plurals>
+  <plurals name="lk_pending_count">
+    <item quantity="one">%1$d pending invitation</item>
+    <item quantity="other">%1$d pending invitations</item>
+  </plurals>
 </resources>

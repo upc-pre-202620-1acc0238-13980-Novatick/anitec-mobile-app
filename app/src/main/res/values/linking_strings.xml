@@ -71,4 +71,20 @@
     <item quantity="one">%1$d finca</item>
     <item quantity="other">%1$d fincas</item>
   </plurals>
+  <string name="lk_outgoing_unavailable">Las invitaciones enviadas no se pueden consultar desde esta pantalla.</string>
+  <string name="lk_capacity_label">Capacidad del plan: %1$d / %2$d ganaderos</string>
+  <string name="lk_access_active">Acceso activo</string>
+  <string name="lk_establishment">Predio o establecimiento</string>
+  <string name="lk_view_animals">Ver animales</string>
+  <string name="lk_their_animals">Sus animales</string>
+  <string name="lk_no_animals">No hay animales que coincidan con esta consulta.</string>
+  <string name="lk_all_species">Todos</string>
+  <plurals name="lk_link_count">
+    <item quantity="one">%1$d vinculado</item>
+    <item quantity="other">%1$d vinculados</item>
+  </plurals>
+  <plurals name="lk_pending_count">
+    <item quantity="one">%1$d invitación pendiente</item>
+    <item quantity="other">%1$d invitaciones pendientes</item>
+  </plurals>
 </resources>

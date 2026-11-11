@@ -30,9 +30,12 @@ class LinkingReviewActivity: ComponentActivity(){
   setContent {CompositionLocalProvider(androidx.compose.ui.platform.LocalContext provides localized,androidx.compose.ui.platform.LocalResources provides localized.resources,androidx.compose.ui.platform.LocalConfiguration provides config){AniTecTheme{
    val vm=remember {LinkingViewModel(DebugLinkingRepository(intent.getStringExtra("scenario") ?: "content"),role)}
    DisposableEffect(vm){vm.refresh();onDispose{vm.close()}}
+   LaunchedEffect(vm){if(intent.getStringExtra("scenario")=="sent")vm.invite("qa.vet@example.invalid",language)}
    Scaffold(bottomBar={if(role==Role.GANADERO) RancherBottomBar(RancherTab.VETS,mapOf(RancherTab.HOME to stringResource(R.string.lk_home),RancherTab.CATTLE to stringResource(R.string.ls_tab_cattle),RancherTab.VETS to stringResource(R.string.lk_vets),RancherTab.PROFILE to stringResource(R.string.lk_profile))){} else VeterinarianBottomBar(VeterinarianTab.RANCHERS,{},mapOf(VeterinarianTab.HOME to stringResource(R.string.lk_home),VeterinarianTab.AGENDA to stringResource(R.string.lk_agenda),VeterinarianTab.RANCHERS to stringResource(R.string.lk_farmers),VeterinarianTab.PROFILE to stringResource(R.string.lk_profile)))}){padding->Box(Modifier.padding(padding).consumeWindowInsets(padding)){
    when(screen){"invite"->InviteVetScreen(vm){};"invitations"->VeterinarianInvitationsScreen(vm){};"farmers"->VeterinarianFarmersScreen(vm,{},{})
-    "detail"->LinkedFarmerDetailScreen(vm,DebugLinkingRepository.FARMER){};else->RancherLinksScreen(vm){}}
+    "animals"->LinkedAnimalsScreen(vm,DebugLinkingRepository.FARMER,{},{})
+    "animal"->LinkedAnimalDetailScreen(vm,DebugLinkingRepository.FARMER,"60000000-0000-4000-8000-000000000001"){}
+    "detail"->LinkedFarmerDetailScreen(vm,DebugLinkingRepository.FARMER,{},{});else->RancherLinksScreen(vm){}}
    }}
   }}}
  }

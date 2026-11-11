@@ -42,4 +42,15 @@ class LinkingViewModelTest {
   val f=object:Fake(){override suspend fun pending():List<PendingInvitation>{error("Wrong role")};override suspend fun farmers():List<LinkedFarmer>{error("Wrong role")};override suspend fun capacity():LinkCapacity{error("Wrong role")}}
   val vm=LinkingViewModel(f,Role.GANADERO,StandardTestDispatcher(testScheduler));vm.refresh();advanceUntilIdle();assertNull(vm.state.value.pending.error);assertNotNull(vm.state.value.links.value);vm.close()
  }
+ @Test fun oldFarmerResponseCannotReplaceNewFarmerOrSurviveLogout()=runTest {
+  val gate=CompletableDeferred<Unit>()
+  val f=object:Fake(){override suspend fun farms(farmerId:String):List<pe.novatick.anitec.features.livestock.domain.Farm>{if(farmerId=="old")withContext(NonCancellable){gate.await()};return listOf(pe.novatick.anitec.features.livestock.domain.Farm(farmerId,farmerId,null,farmerId,"date"))}}
+  val vm=LinkingViewModel(f,Role.VETERINARIO,StandardTestDispatcher(testScheduler));vm.readFarms("old");runCurrent();vm.readFarms("new");runCurrent();gate.complete(Unit);advanceUntilIdle();assertEquals("new",vm.state.value.farms.value!!.single().name);vm.close();assertEquals(LinkingState(),vm.state.value)
+ }
+ @Test fun deniedInventoryRefreshClearsPreviousAnimals()=runTest {
+  var denied=false
+  val f=object:Fake(){override suspend fun animals(farmerId:String):pe.novatick.anitec.features.livestock.domain.Inventory{if(denied)throw AuthFailure(AuthProblem.FORBIDDEN,403);return pe.novatick.anitec.features.livestock.domain.Inventory(0,emptyList())}}
+  val vm=LinkingViewModel(f,Role.VETERINARIO,StandardTestDispatcher(testScheduler));vm.readAnimals("owner");advanceUntilIdle();assertNotNull(vm.state.value.animals.value);denied=true;vm.readAnimals("owner");advanceUntilIdle();assertNull(vm.state.value.animals.value);assertEquals(403,vm.state.value.animals.error!!.status);vm.close()
+ }
+
 }

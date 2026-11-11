@@ -9,7 +9,10 @@ data class LinkingState(
  val links: LinkRead<List<VetLink>> = LinkRead(),val pending: LinkRead<List<PendingInvitation>> = LinkRead(),
  val farmers: LinkRead<List<LinkedFarmer>> = LinkRead(),val capacity: LinkRead<LinkCapacity> = LinkRead(),
  val busy: Boolean=false,val error: AuthFailure?=null,val notice: String?=null,val uncertain: Boolean=false,
- val sent: Invitation?=null)
+ val sent: Invitation?=null,val farmerContext: String?=null,
+ val farms: LinkRead<List<pe.novatick.anitec.features.livestock.domain.Farm>> = LinkRead(),
+ val animals: LinkRead<pe.novatick.anitec.features.livestock.domain.Inventory> = LinkRead(),
+ val animal: LinkRead<pe.novatick.anitec.features.livestock.domain.AnimalDetail> = LinkRead(),val animalId: String?=null)
 /** Owned by the authenticated composition; disposal cancels work and removes all account data. */
 class LinkingViewModel(private val repo: LinkingRepository,val role: Role,dispatcher: CoroutineDispatcher=Dispatchers.Main.immediate) {
  private val job=SupervisorJob();private val scope=CoroutineScope(job+dispatcher)
@@ -27,6 +30,15 @@ class LinkingViewModel(private val repo: LinkingRepository,val role: Role,dispat
   read(repo::links){s,v->s.copy(links=v)}
   if(role==Role.VETERINARIO){read(repo::pending){s,v->s.copy(pending=v)};read(repo::farmers){s,v->s.copy(farmers=v)};read(repo::capacity){s,v->s.copy(capacity=v)}}
  }
+ private var farmTicket=0L;private var animalListTicket=0L;private var animalTicket=0L
+ private fun context(id: String){if(state.value.farmerContext!=id){farmTicket++;animalListTicket++;animalTicket++;mutable.update {it.copy(farmerContext=id,farms=LinkRead(),animals=LinkRead(),animal=LinkRead(),animalId=null)}}}
+ private fun <T> browse(call: suspend ()->T,apply: (LinkRead<T>)->Unit){if(role!=Role.VETERINARIO || !job.isActive)return;scope.launch {
+  val value=try{LinkRead(value=call())}catch(e: CancellationException){throw e}catch(e: AuthFailure){LinkRead<T>(error=e)}catch(_:Exception){LinkRead<T>(error=AuthFailure(AuthProblem.INVALID_RESPONSE))}
+  ensureActive();apply(value)
+ }}
+ fun readFarms(id: String){if(role!=Role.VETERINARIO || !job.isActive)return;context(id);val ticket=++farmTicket;mutable.update {it.copy(farms=LinkRead(loading=true))};browse({repo.farms(id)}){value->if(ticket==farmTicket && state.value.farmerContext==id)mutable.update {it.copy(farms=value)}}}
+ fun readAnimals(id: String){if(role!=Role.VETERINARIO || !job.isActive)return;context(id);val ticket=++animalListTicket;mutable.update {it.copy(animals=LinkRead(loading=true),animal=LinkRead(),animalId=null)};browse({repo.animals(id)}){value->if(ticket==animalListTicket && state.value.farmerContext==id)mutable.update {it.copy(animals=value)}}}
+ fun readAnimal(farmer: String,id: String){if(role!=Role.VETERINARIO || !job.isActive)return;context(farmer);val ticket=++animalTicket;mutable.update {it.copy(animal=LinkRead(loading=true),animalId=id)};browse({repo.animal(farmer,id)}){value->if(ticket==animalTicket && state.value.farmerContext==farmer && state.value.animalId==id)mutable.update {it.copy(animal=value)}}}
  fun clearNotice(){mutable.update {it.copy(error=null,notice=null)}}
  fun invite(email: String,language: String){
   if(role!=Role.GANADERO || !validVetEmail(email) || state.value.sent!=null)return

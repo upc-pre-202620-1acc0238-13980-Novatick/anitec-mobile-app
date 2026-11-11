@@ -4,12 +4,14 @@ import pe.novatick.anitec.core.network.AuthorizedRequests
 import pe.novatick.anitec.features.auth.domain.*
 import pe.novatick.anitec.features.linking.domain.*
 import retrofit2.Response
+import pe.novatick.anitec.features.livestock.domain.*
+import pe.novatick.anitec.features.livestock.infrastructure.LivestockApi
 import java.util.UUID
 import java.text.SimpleDateFormat
 import java.text.ParsePosition
 import java.util.Locale
 
-class LinkingRepositoryImpl(private val api: LinkingApi,private val requests: AuthorizedRequests,private val profile: ()->Profile?) : LinkingRepository {
+class LinkingRepositoryImpl(private val api: LinkingApi,private val requests: AuthorizedRequests,private val livestock: LivestockApi?=null,private val profile: ()->Profile?) : LinkingRepository {
  private fun invalid(): Nothing=throw AuthFailure(AuthProblem.INVALID_RESPONSE)
  private fun id(s: String?): String=s?.takeIf {runCatching {UUID.fromString(it).toString()==it.lowercase()}.getOrDefault(false)} ?: invalid()
  private fun text(s: String?)=s?.takeIf(String::isNotBlank) ?: invalid()
@@ -58,4 +60,42 @@ class LinkingRepositoryImpl(private val api: LinkingApi,private val requests: Au
   role(Role.GANADERO);val target=this.id(id);val d=requests.execute {expected(api.revoke(it,target))}
   if(this.id(d.linkId)!=target || d.status!="REVOCADA") invalid();date(d.revokedAt);Unit
  }
+ // Reuse Livestock wire DTOs, but keep veterinarian scope separate from the owner's mutation repository.
+ private suspend fun allowedFarmer(farmerId: String): LinkedFarmer {
+  role(Role.VETERINARIO);val target=id(farmerId)
+  return farmers().firstOrNull {it.id==target} ?: throw AuthFailure(AuthProblem.FORBIDDEN,403)
+ }
+ override suspend fun farms(farmerId: String)=mapped {
+  val owner=allowedFarmer(farmerId);val wire=livestock ?: invalid()
+  val result=requests.execute {expected(wire.farms(it))}.onEach {id(it.ownerId);id(it.id)}.filter {it.ownerId==owner.id}.map {
+   val farm=id(it.id);if(owner.farms.none {f->f.id==farm}) invalid()
+   Farm(farm,text(it.name),it.location,owner.id,date(it.createdAt))
+  }
+  if(result.map {it.id}.distinct().size!=result.size) invalid()
+  result
+ }
+ override suspend fun animals(farmerId: String)=mapped {
+  val owner=allowedFarmer(farmerId);val wire=livestock ?: invalid()
+  // The global totalActive includes ALL linked owners. Sum scoped farm totals instead.
+  var active=0L;val animals=mutableListOf<AnimalSummary>()
+  for(farm in owner.farms){
+   val result=requests.execute {expected(wire.farmAnimals(it,farm.id,null,null,null))};active=Math.addExact(active,count(result.totalActive))
+   (result.content ?: invalid()).forEach {a->
+    if(a.ownerId!=owner.id || a.farmId!=farm.id) invalid()
+    animals+=AnimalSummary(id(a.id),text(a.code),a.name,text(a.species),id(a.speciesId),AnimalStatus.entries.firstOrNull {it.name==a.status} ?: invalid(),id(a.farmId),id(a.ownerId),count(a.version))
+   }
+  }
+  if(animals.map {it.id}.distinct().size!=animals.size) invalid()
+  Inventory(active,animals)
+ }
+ override suspend fun animal(farmerId: String,animalId: String)=mapped {
+  val owner=allowedFarmer(farmerId);val wire=livestock ?: invalid();val target=id(animalId)
+  val d=requests.execute {expected(wire.animal(it,target))};val farm=id(d.farmId)
+  if(id(d.id)!=target || owner.farms.none {it.id==farm}) throw AuthFailure(AuthProblem.FORBIDDEN,403)
+  val species=id(d.speciesId)
+  d.birthDate?.let {if("birthDate" in animalInputErrors(NewAnimal(farm,species,AnimalSex.DESCONOCIDO,birthDate=it))) invalid()}
+  AnimalDetail(target,text(d.code),d.name,text(d.species),species,AnimalSex.entries.firstOrNull {it.name==d.sex} ?: invalid(),d.breed,d.birthDate,
+   AnimalStatus.entries.firstOrNull {it.name==d.status} ?: invalid(),farm,text(d.farmName),count(d.version),d.photoUrl)
+ }
+
 }
