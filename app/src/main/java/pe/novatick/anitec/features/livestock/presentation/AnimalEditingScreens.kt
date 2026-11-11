@@ -1,6 +1,8 @@
 package pe.novatick.anitec.features.livestock.presentation
 
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -94,13 +96,17 @@ import pe.novatick.anitec.ui.theme.*
 @Composable internal fun AnimalDeactivationDialog(animal: AnimalDetail,mutation: AnimalMutation,cancel: ()->Unit,confirm: ()->Unit) {
     Dialog(onDismissRequest={if(!mutation.busy) cancel()},properties=DialogProperties(usePlatformDefaultWidth=false,decorFitsSystemWindows=false)) {
         val view=androidx.compose.ui.platform.LocalView.current
-        DisposableEffect(view) {
-            val window=(view.parent as? DialogWindowProvider)?.window
-            window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-            window?.setDimAmount(.44f)
-            onDispose {}
+        // The scrim is an actual layer in this full-screen dialog, not behind its content window.
+        // Resolve all ancestors: a direct-parent cast is not guaranteed by Compose/Android wrappers.
+        val window=generateSequence(view.parent) {it.parent}.filterIsInstance<DialogWindowProvider>().firstOrNull()?.window
+        SideEffect {
+            window?.setDimAmount(0f)
+            window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
         }
-        Box(Modifier.fillMaxSize().systemBarsPadding().padding(22.dp),contentAlignment=Alignment.Center) {
+        Box(Modifier.fillMaxSize()) {
+            Box(Modifier.matchParentSize().background(Color.Black.copy(alpha=.44f)).testTag("animal_deactivation_scrim")
+                .pointerInput(mutation.busy) {detectTapGestures {if(!mutation.busy) cancel()}})
+            Box(Modifier.fillMaxSize().systemBarsPadding().padding(22.dp),contentAlignment=Alignment.Center) {
             Surface(Modifier.widthIn(max=332.dp).fillMaxWidth().testTag("animal_deactivation_dialog"),shape=RoundedCornerShape(20.dp),color=Color.White) {
                 Column(Modifier.padding(22.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
                     Text(stringResource(R.string.animal_deactivate_title,animal.name?.takeIf(String::isNotBlank) ?: animal.code),Modifier.fillMaxWidth(),fontFamily=Poppins,fontWeight=FontWeight.Bold,fontSize=15.sp,lineHeight=19.5.sp,color=PrimaryGreen,textAlign=TextAlign.Center)
@@ -118,6 +124,7 @@ import pe.novatick.anitec.ui.theme.*
                     }
                 }
             }
+        }
         }
     }
 }
