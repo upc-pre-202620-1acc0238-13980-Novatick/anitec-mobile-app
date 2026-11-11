@@ -59,11 +59,11 @@ fun AniTecAppNavigation(vm: AuthViewModel,registration: RegistrationViewModel?=n
     key(profile?.id,profile?.role) {
         if(profile != null) {
             Column(Modifier.fillMaxSize()) {
-                Text(stringResource(R.string.auth_demo),modifier=Modifier.statusBarsPadding())
+                Text(stringResource(if(BuildConfig.API_ENVIRONMENT=="LAB") R.string.alpha_lab else R.string.alpha_staging),modifier=Modifier.statusBarsPadding())
                 Box(Modifier.weight(1f)) {
                     when(profile!!.role) {
                         Role.GANADERO -> RancherMainContainer(onNavigateToLogin=onLogout,livestock=livestock,profile=profile)
-                        Role.VETERINARIO -> VeterinarianMainContainer(onNavigateToLogin=onLogout)
+                        Role.VETERINARIO -> Column { Text(stringResource(R.string.alpha_rancher_only)); TextButton(onClick=onLogout) {Text(stringResource(R.string.alpha_logout))} }
                     }
                 }
             }

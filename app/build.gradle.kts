@@ -20,7 +20,27 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:18080/api/v1/\"")
+            buildConfigField("String", "API_ENVIRONMENT", "\"LAB\"")
+        }
+        create("alpha") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".alpha.staging"
+            versionNameSuffix = "-alpha-staging"
+            buildConfigField("String", "API_BASE_URL", "\"https://anitec-staging.onrender.com/api/v1/\"")
+            buildConfigField("String", "API_ENVIRONMENT", "\"STAGING\"")
+        }
+        create("labAlpha") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".alpha.lab"
+            versionNameSuffix = "-alpha-lab"
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:18080/api/v1/\"")
+            buildConfigField("String", "API_ENVIRONMENT", "\"LAB\"")
+        }
         release {
+            buildConfigField("String", "API_BASE_URL", "\"https://anitec-staging.onrender.com/api/v1/\"")
+            buildConfigField("String", "API_ENVIRONMENT", "\"STAGING\"")
             optimization {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
