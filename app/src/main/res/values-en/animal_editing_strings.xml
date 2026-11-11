@@ -1,0 +1,16 @@
+<resources>
+    <string name="animal_edit_code">Code *</string>
+    <string name="animal_take_photo">Take photo</string>
+    <string name="animal_upload_photo">Upload photo</string>
+    <string name="animal_generate">Generate code</string>
+    <string name="animal_generation_unavailable">Automatic code generation is only available during registration.</string>
+    <string name="animal_preserved_farm">Farm: %1$s. Kept when editing.</string>
+    <string name="animal_code_unique">The code must be unique within your inventory.</string>
+    <string name="animal_save_changes">Save changes</string>
+    <string name="animal_reload">Reload and review</string>
+    <string name="animal_conflict">This animal changed. Reload and review the data before editing again. The change was not overwritten.</string>
+    <string name="animal_mutation_uncertain">The result could not be confirmed. Reload the data before deciding to try again; nothing will be resent automatically.</string>
+    <string name="animal_deactivated">Animal deactivated. Its history is preserved.</string>
+    <string name="animal_deactivate_title">Deactivate %1$s</string>
+    <string name="animal_deactivate_explanation">The animal will leave the active inventory. Its history, care records and observations will be preserved and can be consulted at any time.</string>
+</resources>

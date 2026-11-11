@@ -133,7 +133,7 @@ class AnimalMenuLifecycleTest {
                 touch(anchor.exactCenterX(),anchor.exactCenterY())
                 waitFor("menu accessible") {node(edit)!=null && node(deactivate)!=null}
                 val accessibleMs=(System.nanoTime()-openedAt)/1e6
-                assertTrue(disabled(node(edit)!!));assertTrue(disabled(node(deactivate)!!))
+                assertFalse(disabled(node(edit)!!));assertFalse(disabled(node(deactivate)!!))
                 // Let the framework's spring animation finish; no virtual clock is used.
                 SystemClock.sleep(500)
                 val windowId=node(edit)!!.windowId

@@ -90,14 +90,14 @@ class AnimalRegistrationUiTest {
         Assert.assertEquals(header.center.x,title.center.x,1f)
         compose.onNodeWithText(text(lang,R.string.animal_breed_label)).assertExists()
         compose.onNodeWithContentDescription(text(lang,R.string.animal_more)).performClick()
-        compose.onNodeWithTag("animal_edit").assertIsNotEnabled().performTouchInput {click()}
-        compose.onNodeWithTag("animal_deactivate").assertIsNotEnabled().performTouchInput {click()}
+        compose.onNodeWithTag("animal_edit").assertIsEnabled()
+        compose.onNodeWithTag("animal_deactivate").assertIsEnabled()
         compose.onNodeWithTag("animal_options").assertExists()
-        compose.onAllNodesWithText(text(lang,R.string.animal_not_available)).assertCountEquals(2)
+        compose.onAllNodesWithText(text(lang,R.string.animal_not_available)).assertCountEquals(0)
         compose.onNodeWithText("QA-16 · Bovino").assertExists()
     }
-    @Test fun centeredHeaderAndUnavailableOptionsSpanish()=detailOptions("es")
-    @Test fun centeredHeaderAndUnavailableOptionsEnglish()=detailOptions("en")
+    @Test fun centeredHeaderAndEnabledOptionsSpanish()=detailOptions("es")
+    @Test fun centeredHeaderAndEnabledOptionsEnglish()=detailOptions("en")
     private fun inventoryContext(lang: String) {
         val repo=LivestockReviewRepository()
         compose.setContent {LivestockLocaleFixture(lang,repo)}

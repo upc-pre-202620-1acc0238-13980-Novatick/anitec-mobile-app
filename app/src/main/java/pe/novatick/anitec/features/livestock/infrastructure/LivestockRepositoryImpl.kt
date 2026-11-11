@@ -56,6 +56,17 @@ class LivestockRepositoryImpl(private val api: LivestockApi,private val requests
             a
         }
     }
+    override suspend fun updateAnimal(id: String,input: AnimalEdit): AnimalSummary = mapped {
+        val a=summary(requests.execute {expected(api.updateAnimal(it,this.id(id),AnimalUpdateRequest(
+            input.code.trim(),input.speciesId,input.sex.name,input.name,input.breed,input.birthDate,input.photoUrl,input.version)))})
+        if(a.id!=id || a.speciesId!=input.speciesId || a.version<=input.version) invalid()
+        a
+    }
+    override suspend fun deactivateAnimal(id: String): AnimalDeactivation = mapped {
+        val result=requests.execute {expected(api.deactivateAnimal(it,this.id(id)))}
+        if(this.id(result.id)!=id || result.status!=AnimalStatus.INACTIVO.name) invalid()
+        AnimalDeactivation(id,AnimalStatus.INACTIVO)
+    }
     override suspend fun animal(id: String): AnimalDetail = mapped {
         val d=requests.execute {expected(api.animal(it,this.id(id)))}
         if(this.id(d.id)!=id) invalid()

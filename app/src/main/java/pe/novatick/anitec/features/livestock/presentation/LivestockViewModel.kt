@@ -9,7 +9,8 @@ import pe.novatick.anitec.features.livestock.application.*
 data class ReadState<T>(val value: T?=null,val loading: Boolean=false,val failed: Boolean=false) {
     val stale get()=failed && value!=null
 }
-data class LivestockState(val farms: ReadState<List<Farm>> = ReadState(),val species: ReadState<List<Species>> = ReadState(),
+data class AnimalMutation(val busy: Boolean=false,val error: AuthFailure?=null,val completed: String?=null)
+data class LivestockState(val mutation: AnimalMutation=AnimalMutation(),val farms: ReadState<List<Farm>> = ReadState(),val species: ReadState<List<Species>> = ReadState(),
     val capacity: ReadState<Capacity> = ReadState(),val inventory: ReadState<Inventory> = ReadState(),val filter: InventoryFilter=InventoryFilter(),
     val registering: Boolean=false,val animalError: AuthFailure?=null,val createdAnimal: AnimalSummary?=null,
     val animalDetail: ReadState<AnimalDetail> = ReadState(),val animalDetailError: AuthFailure?=null,val animalDetailId: String?=null,
@@ -105,6 +106,46 @@ class LivestockViewModel(private val repository: LivestockRepository) : ViewMode
                 if(sent && (e.problem==AuthProblem.NETWORK || e.problem==AuthProblem.INVALID_RESPONSE || e.status>=500)) AuthFailure(e.problem,e.status,"UNCERTAIN") else e)}
                 if(!closed && e.code=="INVENTORY_LIMIT_REACHED") refreshFoundation()
             }
+        }
+    }
+    fun beginMutation() {if(!state.value.mutation.busy) state.update {it.copy(mutation=AnimalMutation())}}
+    fun consumeMutation() {state.update {it.copy(mutation=AnimalMutation())}}
+    fun reloadMutation(id: String) {
+        if(state.value.mutation.busy) return
+        state.update {it.copy(mutation=AnimalMutation())};readAnimal(id)
+    }
+    fun updateAnimal(base: AnimalDetail,input: AnimalEdit) {
+        if(closed || state.value.mutation.busy || state.value.mutation.error?.code in listOf("UNCERTAIN","ANIMAL_VERSION_CONFLICT")) return
+        val errors=animalEditErrors(base,input)
+        if(errors.isNotEmpty()) {state.update {it.copy(mutation=AnimalMutation(error=AuthFailure(AuthProblem.SERVER,400,"VALIDATION_ERROR",errors.map {it to "invalid"})))};return}
+        mutate(base,"EDIT") { repository.updateAnimal(base.id,input) }
+    }
+    fun deactivateAnimal(base: AnimalDetail) {
+        if(closed || state.value.mutation.busy || state.value.mutation.error?.code in listOf("UNCERTAIN","ANIMAL_VERSION_CONFLICT")) return
+        mutate(base,"DEACTIVATE") {
+            // DELETE has no version contract: detect an already stale snapshot, never invent a parameter.
+            // A race after this read remains a documented server-contract limitation.
+            val latest=repository.animal(base.id)
+            if(latest.version!=base.version || latest.status!=base.status) throw AuthFailure(AuthProblem.SERVER,409,"ANIMAL_VERSION_CONFLICT")
+            repository.deactivateAnimal(base.id)
+        }
+    }
+    private fun mutate(base: AnimalDetail,kind: String,operation: suspend ()->Any) {
+        animalRead?.cancel();animalSequence++ // Older reads cannot restore a pre-write snapshot.
+        state.update {it.copy(mutation=AnimalMutation(busy=true))}
+        viewModelScope.launch {
+            try {
+                operation()
+                if(!closed) {
+                    state.update {it.copy(mutation=AnimalMutation(completed=kind))}
+                    readAnimal(base.id);refreshFoundation();filter(state.value.filter)
+                }
+            } catch(e: CancellationException) {throw e}
+            catch(e: AuthFailure) {if(!closed) {
+                val error=if(e.problem==AuthProblem.NETWORK || e.problem==AuthProblem.INVALID_RESPONSE || e.status>=500) AuthFailure(e.problem,e.status,"UNCERTAIN") else e
+                state.update {it.copy(mutation=AnimalMutation(error=error))}
+                if(e.status==403 || e.status==404) state.update {it.copy(animalDetail=ReadState(failed=true),animalDetailError=e)}
+            }}
         }
     }
     fun readAnimal(id: String) {
