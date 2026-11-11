@@ -12,4 +12,10 @@
     <string name="qa_uncertain">Guardado sin confirmar</string>
     <string name="qa_close">Cerrar</string>
     <string name="qa_restart">Reiniciar datos de prueba</string>
+    <string name="qa_obs_empty">Observaciones vacías</string>
+    <string name="qa_obs_loading">Observaciones en carga</string>
+    <string name="qa_obs_error">Error de lectura de observaciones</string>
+    <string name="qa_obs_save_error">Error al guardar observación</string>
+    <string name="qa_obs_uncertain">Observación sin confirmar</string>
+    <string name="qa_obs_saving">Guardando observación</string>
 </resources>

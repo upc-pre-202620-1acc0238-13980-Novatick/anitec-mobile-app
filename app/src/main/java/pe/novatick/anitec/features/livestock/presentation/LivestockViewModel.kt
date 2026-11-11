@@ -17,6 +17,7 @@ data class LivestockState(val mutation: AnimalMutation=AnimalMutation(),val farm
     val selectedFarm: ReadState<Farm> = ReadState(),val saving: Boolean=false,val saveError: String?=null,val createdFarm: Farm?=null)
 /** One instance per authenticated composition; never persisted or shared between users. */
 class LivestockViewModel(private val repository: LivestockRepository) : ViewModel() {
+    val observations=AnimalObservationViewModel(repository)
     private val state=MutableStateFlow(LivestockState());val uiState=state.asStateFlow()
     private var query: Job?=null;private var detail: Job?=null;private var sequence=0L
     private var closed=false
@@ -159,5 +160,5 @@ class LivestockViewModel(private val repository: LivestockRepository) : ViewMode
         }
     }
     fun clearCreation() { state.update { it.copy(createdFarm=null,saveError=null) } }
-    fun close() { closed=true;sequence++;viewModelScope.cancel();state.value=LivestockState() }
+    fun close() { observations.close();closed=true;sequence++;viewModelScope.cancel();state.value=LivestockState() }
 }

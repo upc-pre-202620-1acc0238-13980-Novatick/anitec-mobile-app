@@ -12,4 +12,10 @@
     <string name="qa_uncertain">Uncertain save</string>
     <string name="qa_close">Close</string>
     <string name="qa_restart">Reset test data</string>
+    <string name="qa_obs_empty">Empty observations</string>
+    <string name="qa_obs_loading">Loading observations</string>
+    <string name="qa_obs_error">Observation read error</string>
+    <string name="qa_obs_save_error">Observation save error</string>
+    <string name="qa_obs_uncertain">Unconfirmed observation</string>
+    <string name="qa_obs_saving">Saving observation</string>
 </resources>

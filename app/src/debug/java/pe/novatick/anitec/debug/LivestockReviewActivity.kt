@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -34,11 +36,13 @@ class LivestockReviewActivity: ComponentActivity() {
                 }
             }
             if(panel) AlertDialog(onDismissRequest={panel=false},title={Text(stringResource(R.string.qa_scenarios))},
-                text={Column {
+                text={Column(Modifier.heightIn(max=420.dp).verticalScroll(rememberScrollState())) {
                     Text(stringResource(R.string.qa_notice))
                     val choices=listOf("content" to R.string.qa_content,"empty" to R.string.qa_empty,"no-farms" to R.string.qa_no_farms,
                         "loading" to R.string.qa_loading,"error" to R.string.qa_error,"saving" to R.string.qa_saving,
-                        "save-error" to R.string.qa_save_error,"save-uncertain" to R.string.qa_uncertain)
+                        "save-error" to R.string.qa_save_error,"save-uncertain" to R.string.qa_uncertain,
+                        "obs-empty" to R.string.qa_obs_empty,"obs-loading" to R.string.qa_obs_loading,"obs-error" to R.string.qa_obs_error,
+                        "obs-save-error" to R.string.qa_obs_save_error,"obs-uncertain" to R.string.qa_obs_uncertain,"obs-saving" to R.string.qa_obs_saving)
                     choices.forEach { (value,label)->TextButton(onClick={scenario=value;generation++;panel=false}) {Text(stringResource(label))} }
                 }},confirmButton={TextButton(onClick={generation++;panel=false}) {Text(stringResource(R.string.qa_restart))}},
                 dismissButton={TextButton(onClick={panel=false}) {Text(stringResource(R.string.qa_close))}})

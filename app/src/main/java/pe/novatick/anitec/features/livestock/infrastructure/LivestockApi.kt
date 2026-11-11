@@ -18,7 +18,11 @@ import pe.novatick.anitec.features.auth.infrastructure.Envelope
 @Keep data class AnimalUpdateRequest(val code: String,val speciesId: String,val sex: String,val name: String?,
     val breed: String?,val birthDate: String?,val photoUrl: String?,val version: Long)
 @Keep data class AnimalStatusDto(val id: String?,val status: String?)
+@Keep data class ObservationDto(val id: String?,val text: String?,val authorName: String?,val date: String?)
+@Keep data class ObservationRequest(val text: String)
 interface LivestockApi {
+    @GET("animals/{id}/observations") suspend fun observations(@Header("Authorization") bearer: String,@Path("id") id: String): Response<Envelope<List<ObservationDto>>>
+    @POST("animals/{id}/observations") suspend fun addObservation(@Header("Authorization") bearer: String,@Path("id") id: String,@Body body: ObservationRequest): Response<Envelope<ObservationDto>>
     @PUT("animals/{id}") suspend fun updateAnimal(@Header("Authorization") bearer: String,@Path("id") id: String,@Body body: AnimalUpdateRequest): Response<Envelope<AnimalDto>>
     @DELETE("animals/{id}") suspend fun deactivateAnimal(@Header("Authorization") bearer: String,@Path("id") id: String): Response<Envelope<AnimalStatusDto>>
     @POST("animals") suspend fun createAnimal(@Header("Authorization") bearer: String,@Body body: AnimalDataRequest): Response<Envelope<AnimalDto>>

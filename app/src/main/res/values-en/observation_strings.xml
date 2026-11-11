@@ -1,0 +1,19 @@
+<resources>
+    <string name="obs_title">Observations</string>
+    <string name="obs_add">Add observation</string>
+    <string name="obs_all">View all (%1$d)</string>
+    <string name="obs_hint">Note changes in the animal’s behaviour or condition</string>
+    <string name="obs_info">Describe what you have noticed about your animal. This note will remain in its profile.</string>
+    <string name="obs_label">Observation *</string>
+    <string name="obs_invalid">Enter an observation with content.</string>
+    <string name="obs_save">Save observation</string>
+    <string name="obs_empty">There are no observations yet.</string>
+    <string name="obs_read_error">Could not load observations.</string>
+    <string name="obs_save_error">Could not save the observation.</string>
+    <string name="obs_uncertain">Registration is unconfirmed. Check observations before deciding on another attempt. It will not be resent automatically.</string>
+    <string name="obs_check">Check observations</string>
+    <string name="obs_allow">I checked the list: allow a new manual attempt</string>
+    <string name="obs_saving">Saving observation&#8230;</string>
+    <string name="obs_placeholder">Write your observation here&#8230;</string>
+    <string name="obs_all_unknown">View all</string>
+</resources>

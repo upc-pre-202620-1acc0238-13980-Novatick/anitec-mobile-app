@@ -15,6 +15,25 @@ internal class DebugLivestockRepository(val scenario: String="content") : Livest
     private val names=listOf("Luna","Mora","Rayo","Gloria","Laura","Polo","Alba","Nina","Sol","Brisa","Perla","Rocío","Cielo","Nube","Valle")
     private val animals=names.mapIndexed { i,name ->AnimalSummary(uuid(100+i),"ANI-"+(i+1).toString().padStart(6,'0'),name,catalog[i%catalog.size].name,catalog[i%catalog.size].id,
         if(i<12) AnimalStatus.ACTIVO else AnimalStatus.entries[i-11],mutableFarms[if(i<8) 0 else 1].id,owner,0) }.toMutableList()
+    private val notes=mutableMapOf<String,MutableList<AnimalObservation>>()
+    override suspend fun observations(id: String): List<AnimalObservation> {
+        if(scenario=="obs-loading") kotlinx.coroutines.awaitCancellation()
+        if(scenario=="obs-error" && failed.add("observations")) throw AuthFailure(AuthProblem.NETWORK)
+        read("observations")
+        return notes.getOrPut(id) {if(scenario in listOf("empty","obs-empty")) mutableListOf() else mutableListOf(
+            AnimalObservation(uuid(501),"Se adapta bien al lote y mantiene buen apetito.","Alex Rivera","2026-11-10"),
+            AnimalObservation(uuid(502),"Desde ayer come un poco menos, sin otros cambios visibles.","Alex Rivera","2026-11-09"),
+            AnimalObservation(uuid(503),"Permanece tranquila durante la tarde.","Alex Rivera","2026-11-08"))}.toList()
+    }
+    override suspend fun addObservation(id: String,text: String): AnimalObservation {
+        if(!validObservationText(text)) throw AuthFailure(AuthProblem.SERVER,400,"VALIDATION_ERROR")
+        if(scenario in listOf("save-uncertain","obs-uncertain")) throw AuthFailure(AuthProblem.NETWORK)
+        if(scenario in listOf("save-error","obs-save-error")) throw AuthFailure(AuthProblem.SERVER,403,"FORBIDDEN")
+        if(scenario in listOf("saving","obs-saving")) kotlinx.coroutines.delay(3000)
+        observations(id)
+        val value=AnimalObservation(uuid(600+notes.getValue(id).size),text,"Alex Rivera","2026-11-11")
+        notes.getValue(id).add(0,value);return value
+    }
     private val registered=mutableMapOf<String,AnimalDetail>()
     override suspend fun createAnimal(input: NewAnimal): AnimalSummary {
         if(animalInputErrors(input).isNotEmpty()) throw AuthFailure(AuthProblem.SERVER,400,"VALIDATION_ERROR")
