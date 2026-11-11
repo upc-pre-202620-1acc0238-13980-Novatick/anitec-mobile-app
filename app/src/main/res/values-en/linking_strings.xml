@@ -63,4 +63,12 @@
   <string name="lk_sent_receipt">Last invitation confirmed in this session</string>
   <string name="lk_pending_status">Status when sent: pending</string>
   <string name="lk_logout">Sign out</string>
+  <plurals name="lk_animals">
+    <item quantity="one">%1$d animal</item>
+    <item quantity="other">%1$d animals</item>
+  </plurals>
+  <plurals name="lk_farm_count">
+    <item quantity="one">%1$d farm</item>
+    <item quantity="other">%1$d farms</item>
+  </plurals>
 </resources>

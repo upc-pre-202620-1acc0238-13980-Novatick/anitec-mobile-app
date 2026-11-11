@@ -115,10 +115,15 @@ import pe.novatick.anitec.ui.theme.*
   LsAction(stringResource(R.string.lk_remove),{remove=null;vm.revoke(link.id)},primary=true,enabled=!s.busy && !s.uncertain)
  })}
 }
-@Composable private fun PendingCards(s: LinkingState,vm: LinkingViewModel){
+@Composable private fun PendingCards(s: LinkingState,vm: LinkingViewModel,compact: Boolean=false){
  LinkReadContent(s.pending,vm){items->
   if(items.isEmpty())LsNotice(stringResource(R.string.lk_no_requests))
-  items.forEach {item->Surface(shape=RoundedCornerShape(17.dp),border=BorderStroke(1.dp,LivestockVisuals.Border),color=Color.White,modifier=Modifier.fillMaxWidth()){
+  items.forEach {item->if(compact){LinkCard {
+   LinkAvatar(item.farmerName)
+   Column(Modifier.weight(1f)){LsText(item.farmerName,size=11,bold=true);LsText(stringResource(R.string.lk_date,linkDate(item.sentDate)),size=9,color=NeutralSlate)}
+   OutlinedButton(onClick={vm.respond(item.id,false)},enabled=!s.busy && !s.uncertain,shape=RoundedCornerShape(8.dp),contentPadding=PaddingValues(5.dp),border=BorderStroke(1.dp,PrimaryGreen),modifier=Modifier.widthIn(min=60.dp).heightIn(min=48.dp)){LsText(stringResource(R.string.lk_reject),size=10,color=PrimaryGreen)}
+   Button(onClick={vm.respond(item.id,true)},enabled=!s.busy && !s.uncertain,shape=RoundedCornerShape(8.dp),contentPadding=PaddingValues(5.dp),colors=ButtonDefaults.buttonColors(containerColor=PrimaryGreenAccent),modifier=Modifier.widthIn(min=60.dp).heightIn(min=48.dp)){LsText(stringResource(R.string.lk_accept),size=10,bold=true,color=Color.White)}
+  }} else Surface(shape=RoundedCornerShape(17.dp),border=BorderStroke(1.dp,LivestockVisuals.Border),color=Color.White,modifier=Modifier.fillMaxWidth()){
    Column(Modifier.padding(15.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
     Row(horizontalArrangement=Arrangement.spacedBy(12.dp)){LinkAvatar(item.farmerName,58);Column(Modifier.weight(1f)){
      LsText(item.farmerName,size=12,bold=true);LsText(stringResource(R.string.lk_date,linkDate(item.sentDate)),size=10,color=NeutralSlate);LsText(stringResource(R.string.lk_request_detail),size=10,color=LivestockVisuals.Secondary)
@@ -144,12 +149,12 @@ import pe.novatick.anitec.ui.theme.*
   LinkReadContent(s.farmers,vm){farmers->val found=farmers.filter {it.name.contains(search,true)}
    if(farmers.isEmpty())LsNotice(stringResource(R.string.lk_no_links)) else if(found.isEmpty())LsNotice(stringResource(R.string.lk_no_match))
    found.forEach {farmer->LinkCard({detail(farmer.id)}){
-    LinkAvatar(farmer.name);Column(Modifier.weight(1f)){LsText(farmer.name,size=12,bold=true);LsText(stringResource(R.string.lk_counts,farmer.animals,farmer.farms.size),size=10,color=NeutralSlate)}
-    Icon(painterResource(R.drawable.ls_chevron_official),null,tint=Color.Unspecified,modifier=Modifier.size(8.25.dp,14.5.dp))
+    LinkAvatar(farmer.name);Column(Modifier.weight(1f)){LsText(farmer.name,size=12,bold=true);LsText(pluralStringResource(R.plurals.lk_animals,if(farmer.animals==1L)1 else 2,farmer.animals)+" · "+pluralStringResource(R.plurals.lk_farm_count,farmer.farms.size,farmer.farms.size),size=10,color=NeutralSlate)}
+    Icon(painterResource(R.drawable.link_chevron_official),null,tint=Color.Unspecified,modifier=Modifier.size(17.dp))
    }}
   }
   Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){LsText(stringResource(R.string.lk_pending),Modifier.weight(1f),bold=true);TextButton(onClick=invitations){LsText(stringResource(R.string.lk_all),size=11,color=PrimaryGreen)}}
-  PendingCards(s,vm)
+  PendingCards(s,vm,compact=true)
  }
 }
 @Composable fun VeterinarianInvitationsScreen(vm: LinkingViewModel,back: ()->Unit){
@@ -166,7 +171,7 @@ import pe.novatick.anitec.ui.theme.*
     LinkCard {LinkAvatar(farmer.name,50);Column(Modifier.weight(1f)){LsText(farmer.name,bold=true);link?.let {LsText(stringResource(R.string.lk_since,linkDate(it.linkedAt)),size=10,color=NeutralSlate)};LsText(stringResource(R.string.lk_active),size=10,color=PrimaryGreen)}}
     LsText(stringResource(R.string.lk_farms),bold=true)
     if(farmer.farms.isEmpty())LsNotice(stringResource(R.string.lk_no_farms))
-    farmer.farms.forEach {farm->LinkCard {Icon(painterResource(R.drawable.ic_home),null,tint=PrimaryGreen,modifier=Modifier.size(24.dp));Column {LsText(farm.name,bold=true);LsText(stringResource(R.string.lk_farm_animals,farm.animals),size=11,color=NeutralSlate)}}}
+    farmer.farms.forEach {farm->LinkCard {Icon(painterResource(R.drawable.link_farm_official),null,tint=Color.Unspecified,modifier=Modifier.size(22.5427.dp,17.9991.dp));Column {LsText(farm.name,bold=true);LsText(stringResource(R.string.lk_farm_animals,farm.animals),size=11,color=NeutralSlate)}}}
    }
   }
   TextButton(onClick=vm::refresh){LsText(stringResource(R.string.lk_reload),color=PrimaryGreen)}
