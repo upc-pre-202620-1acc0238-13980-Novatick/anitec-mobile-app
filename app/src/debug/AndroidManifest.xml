@@ -3,5 +3,6 @@
         <activity android:name=".debug.LivestockReviewActivity" android:exported="true"
             android:label="ANITEC - QA local" android:theme="@style/Theme.AniTec"
             android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".debug.LinkingReviewActivity" android:exported="true" android:theme="@style/Theme.AniTec" android:windowSoftInputMode="adjustResize" />
     </application>
 </manifest>
