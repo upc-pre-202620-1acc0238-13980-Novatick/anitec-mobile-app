@@ -14,8 +14,9 @@ import java.util.concurrent.TimeUnit
 
 /** Manual application-scoped DI; no extra DI framework or business feature migration. */
 class AuthContainer(context: Context) {
+    private val pool=okhttp3.ConnectionPool()
     private val client=OkHttpClient.Builder().connectTimeout(10,TimeUnit.SECONDS).readTimeout(10,TimeUnit.SECONDS)
-        .callTimeout(15,TimeUnit.SECONDS).retryOnConnectionFailure(false).followRedirects(false).followSslRedirects(false).build()
+        .callTimeout(15,TimeUnit.SECONDS).connectionPool(pool).addInterceptor(pe.novatick.anitec.core.network.ReadEofRecovery(pool)).eventListenerFactory(if(BuildConfig.DEBUG) pe.novatick.anitec.core.network.NetworkDiagnostics.factory else okhttp3.EventListener.Factory { okhttp3.EventListener.NONE }).retryOnConnectionFailure(false).followRedirects(false).followSslRedirects(false).build()
     private val retrofit = Retrofit.Builder().baseUrl(BuildConfig.API_BASE_URL).client(client)
         .addConverterFactory(GsonConverterFactory.create()).build()
     private val api: AuthApi=retrofit.create(AuthApi::class.java)
