@@ -23,13 +23,13 @@ import pe.novatick.anitec.ui.theme.*
 }
 
 /** Clinical data is not integrated in 3A. These neutral placeholders make no empty-list claim. */
-@Composable internal fun LivestockHomeSections(onRegister: ()->Unit={}) {
+@Composable internal fun LivestockHomeSections(onRegister: ()->Unit={},onInvite: ()->Unit={}) {
     val unavailable=rememberLivestockUnavailableAction()
     Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {
         LsText(stringResource(R.string.ls_quick_actions),bold=true)
         Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             HomeQuickAction(stringResource(R.string.ls_register_short),R.drawable.ls_plus_official,Modifier.weight(1f),onRegister)
-            HomeQuickAction(stringResource(R.string.ls_invite_vet),R.drawable.ls_mail_official,Modifier.weight(1f),unavailable)
+            HomeQuickAction(stringResource(R.string.ls_invite_vet),R.drawable.ls_mail_official,Modifier.weight(1f),onInvite)
         }
     }
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {

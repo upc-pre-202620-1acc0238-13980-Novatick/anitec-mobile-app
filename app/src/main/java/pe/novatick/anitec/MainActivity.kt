@@ -42,14 +42,14 @@ class MainActivity : ComponentActivity() {
                 val registration=remember {provider[RegistrationViewModel::class.java]}
                 SideEffect {authModel=vm}
                 LaunchedEffect(Unit) {vm.restore()}
-                AniTecAppNavigation(vm,registration,container.livestock)
+                AniTecAppNavigation(vm,registration,container.livestock,container.linking)
             }
         } }
     }
 }
 
 @Composable
-fun AniTecAppNavigation(vm: AuthViewModel,registration: RegistrationViewModel?=null,livestock: pe.novatick.anitec.features.livestock.domain.LivestockRepository?=null) {
+fun AniTecAppNavigation(vm: AuthViewModel,registration: RegistrationViewModel?=null,livestock: pe.novatick.anitec.features.livestock.domain.LivestockRepository?=null,linking: pe.novatick.anitec.features.linking.domain.LinkingRepository?=null) {
     val profile by vm.profile.collectAsState()
     val state by vm.uiState.collectAsState()
     LaunchedEffect(profile?.id) { if(profile!=null) registration?.abandon() }
@@ -67,8 +67,8 @@ fun AniTecAppNavigation(vm: AuthViewModel,registration: RegistrationViewModel?=n
                 if(BuildConfig.DEBUG && BuildConfig.API_ENVIRONMENT=="LAB") Text(stringResource(if(BuildConfig.API_ENVIRONMENT=="LAB") R.string.alpha_lab else R.string.alpha_staging),modifier=Modifier.statusBarsPadding())
                 Box(Modifier.weight(1f)) {
                     when(profile!!.role) {
-                        Role.GANADERO -> RancherMainContainer(onNavigateToLogin=onLogout,livestock=livestock,profile=profile)
-                        Role.VETERINARIO -> Column { Text(stringResource(R.string.alpha_rancher_only)); TextButton(onClick=onLogout) {Text(stringResource(R.string.alpha_logout))} }
+                        Role.GANADERO -> RancherMainContainer(onNavigateToLogin=onLogout,livestock=livestock,profile=profile,linking=linking)
+                        Role.VETERINARIO -> if(linking!=null) pe.novatick.anitec.features.linking.presentation.VeterinaryLinkingShell(linking,profile!!,onLogout)
                     }
                 }
             }
