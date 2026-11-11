@@ -226,7 +226,7 @@ import pe.novatick.anitec.ui.theme.Poppins
     }
 }
 @Composable fun AnimalDetailScreen(state: LivestockState,back: ()->Unit,retry: ()->Unit,
-    edit: ()->Unit={},deactivate: (AnimalDetail)->Unit={},reloadMutation: ()->Unit={},consumeMutation: ()->Unit={}) {
+    edit: ()->Unit={},deactivate: (AnimalDetail)->Unit={},reloadMutation: ()->Unit={},consumeMutation: ()->Unit={},observations: @Composable (String)->Unit={}) {
     var confirm by remember(state.animalDetailId) {mutableStateOf(false)}
     LaunchedEffect(state.mutation.completed) {if(state.mutation.completed=="DEACTIVATE") confirm=false}
     val current=state.animalDetail.value
@@ -269,6 +269,7 @@ import pe.novatick.anitec.ui.theme.Poppins
                     }
                 }
             }
+            observations(animal.id)
         }
     }
 }

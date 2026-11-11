@@ -27,14 +27,14 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
 
 @Composable fun LivestockShell(vm: LivestockViewModel,profile: Profile,onLogout: ()->Unit) {
     val nav=rememberNavController();val entry by nav.currentBackStackEntryAsState()
-    val tab=when(entry?.destination?.route) { "cattle","animal_register","animal/{id}","animal/{id}/edit"->RancherTab.CATTLE;"profile"->RancherTab.PROFILE;"vets"->RancherTab.VETS;else->RancherTab.HOME }
-    val state by vm.uiState.collectAsState();val type=MaterialTheme.typography
+    val tab=when(entry?.destination?.route) { "cattle","animal_register","animal/{id}","animal/{id}/edit","animal/{id}/observations","animal/{id}/observation/new"->RancherTab.CATTLE;"profile"->RancherTab.PROFILE;"vets"->RancherTab.VETS;else->RancherTab.HOME }
+    val obs by vm.observations.uiState.collectAsState();val state by vm.uiState.collectAsState();val type=MaterialTheme.typography
     val labels=mapOf(RancherTab.HOME to stringResource(R.string.ls_tab_home),RancherTab.CATTLE to stringResource(R.string.ls_tab_cattle),
         RancherTab.VETS to stringResource(R.string.ls_tab_vets),RancherTab.PROFILE to stringResource(R.string.ls_tab_profile))
     MaterialTheme(colorScheme=MaterialTheme.colorScheme.copy(primary=PrimaryGreen,onPrimary=Color.White,surface=Color.White),
         typography=type.copy(bodyLarge=type.bodyLarge.copy(fontFamily=Poppins),bodyMedium=type.bodyMedium.copy(fontFamily=Poppins),labelLarge=type.labelLarge.copy(fontFamily=Poppins))) {
         Scaffold(containerColor=Color.White,bottomBar={RancherBottomBar(tab,labels) { value ->
-            if(state.registering || state.mutation.busy) return@RancherBottomBar
+            if(state.registering || state.mutation.busy || obs.busy) return@RancherBottomBar
             nav.navigate(when(value) { RancherTab.HOME->"home";RancherTab.CATTLE->"cattle";RancherTab.PROFILE->"profile";RancherTab.VETS->"vets" }) { launchSingleTop=true;popUpTo("home") }
         }}) { padding -> Box(Modifier.padding(padding).consumeWindowInsets(padding)) { NavHost(nav,startDestination="home") {
             composable("home") { pe.novatick.anitec.RancherHomeScreen(onNavigateToCattle={nav.navigate("cattle")},onNavigateToLinkedVets={},
@@ -44,15 +44,25 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
             composable("cattle") {LivestockInventoryScreen(state,vm,onRegister={vm.beginAnimal();nav.navigate("animal_register")},onAnimal={nav.navigate("animal/$it")})}
             composable("animal_register") {AnimalRegistrationScreen(state,vm,{nav.popBackStack()}) {nav.navigate("animal/$it") {popUpTo("animal_register") {inclusive=true}}}}
             composable("animal/{id}") {back -> val id=back.arguments?.getString("id").orEmpty()
-                LaunchedEffect(id) {vm.readAnimal(id)}
+                LaunchedEffect(id) {vm.readAnimal(id);vm.observations.load(id)}
                 val selected=if(state.animalDetailId==id) state else state.copy(animalDetail=ReadState(loading=true),animalDetailError=null)
                 AnimalDetailScreen(selected,{vm.consumeMutation();nav.popBackStack()},{vm.readAnimal(id)},
                     edit={vm.beginMutation();nav.navigate("animal/$id/edit")},deactivate=vm::deactivateAnimal,
-                    reloadMutation={vm.reloadMutation(id)},consumeMutation=vm::consumeMutation)
+                    reloadMutation={vm.reloadMutation(id)},consumeMutation=vm::consumeMutation,observations={animalId ->
+                        ObservationSection(animalId,obs,vm.observations,{nav.navigate("animal/$id/observations")},{vm.observations.begin();nav.navigate("animal/$id/observation/new")})
+                    })
             }
             composable("animal/{id}/edit") {back -> val id=back.arguments?.getString("id").orEmpty()
                 LaunchedEffect(id) {if(state.animalDetailId!=id) vm.readAnimal(id);vm.refreshFoundation()}
                 AnimalEditScreen(state,vm,{vm.consumeMutation();nav.popBackStack()}) {vm.consumeMutation();nav.popBackStack()}
+            }
+            composable("animal/{id}/observations") {entry -> val id=entry.arguments?.getString("id").orEmpty()
+                LaunchedEffect(id) {vm.observations.load(id)}
+                ObservationListScreen(id,obs,vm.observations,{nav.popBackStack()}) {vm.observations.begin();nav.navigate("animal/$id/observation/new")}
+            }
+            composable("animal/{id}/observation/new") {entry -> val id=entry.arguments?.getString("id").orEmpty()
+                LaunchedEffect(id) {if(state.animalDetailId!=id) vm.readAnimal(id)}
+                ObservationForm(state.animalDetail.value?.takeIf {it.id==id},obs,vm.observations,{nav.popBackStack()}) {vm.readAnimal(id);nav.popBackStack()}
             }
             composable("profile") {RancherProfileScreen(userName=profile.name+" "+profile.lastName,userEmail=profile.email,onLogoutClick=onLogout)}
             composable("vets") {LsEmpty(stringResource(R.string.ls_pending),stringResource(R.string.ls_future))}

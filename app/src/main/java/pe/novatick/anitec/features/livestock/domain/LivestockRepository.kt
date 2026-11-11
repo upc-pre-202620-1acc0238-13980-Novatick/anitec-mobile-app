@@ -11,6 +11,8 @@ data class Capacity(val ownerId: String,val allowedAnimals: Long,val activeAnima
 }
 data class InventoryFilter(val search: String="",val species: String?=null,val status: AnimalStatus?=AnimalStatus.ACTIVO,val farmId: String?=null)
 interface LivestockRepository {
+    suspend fun observations(id: String): List<AnimalObservation> = throw pe.novatick.anitec.features.auth.domain.AuthFailure(pe.novatick.anitec.features.auth.domain.AuthProblem.SERVER)
+    suspend fun addObservation(id: String,text: String): AnimalObservation = throw pe.novatick.anitec.features.auth.domain.AuthFailure(pe.novatick.anitec.features.auth.domain.AuthProblem.SERVER)
     suspend fun updateAnimal(id: String,input: AnimalEdit): AnimalSummary = throw pe.novatick.anitec.features.auth.domain.AuthFailure(pe.novatick.anitec.features.auth.domain.AuthProblem.SERVER)
     suspend fun deactivateAnimal(id: String): AnimalDeactivation = throw pe.novatick.anitec.features.auth.domain.AuthFailure(pe.novatick.anitec.features.auth.domain.AuthProblem.SERVER)
     suspend fun createAnimal(input: NewAnimal): AnimalSummary = throw pe.novatick.anitec.features.auth.domain.AuthFailure(pe.novatick.anitec.features.auth.domain.AuthProblem.SERVER)

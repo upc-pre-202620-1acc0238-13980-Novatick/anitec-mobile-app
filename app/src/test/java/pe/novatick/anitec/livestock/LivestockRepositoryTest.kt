@@ -124,4 +124,30 @@ class LivestockRepositoryTest {
             server.enqueue(response(json));val e=runCatching {repository.deactivateAnimal(id)}.exceptionOrNull();assertTrue(e is AuthFailure)
         }
     }
+
+    @Test fun observationContractPreservesOrderAndSendsOnlyText()=runBlocking {
+        val animalId="44444444-4444-4444-8444-444444444444"
+        val detail="""{"id":"$animalId","code":"A","species":"Bovino","speciesId":"$species","sex":"DESCONOCIDO","status":"ACTIVO","farmId":"$farm","farmName":"Farm","version":0}"""
+        val note="""{"id":"55555555-5555-4555-8555-555555555555","text":"Text","authorName":"Author","date":"2026-01-01"}"""
+        server.enqueue(response(detail));server.enqueue(response(farmJson()));server.enqueue(response("[$note]"))
+        assertEquals("Author",repository.observations(animalId).single().authorName)
+        server.takeRequest();server.takeRequest();val get=server.takeRequest();assertEquals("/api/v1/animals/$animalId/observations",get.path);assertEquals("GET",get.method)
+        server.enqueue(response(detail));server.enqueue(response(farmJson()));server.enqueue(response(note,201))
+        repository.addObservation(animalId,"Text");server.takeRequest();server.takeRequest();val post=server.takeRequest()
+        assertEquals("POST",post.method);assertEquals("/api/v1/animals/$animalId/observations",post.path)
+        assertEquals(setOf("text"),com.google.gson.JsonParser.parseString(post.body.readUtf8()).asJsonObject.keySet())
+        assertTrue(runCatching {repository.addObservation(animalId," ")}.exceptionOrNull() is AuthFailure)
+    }
+    @Test fun observationHistoryKeepsServerTiesAndOptionalMetadataWithoutFabrication()=runBlocking {
+        val animalId="44444444-4444-4444-8444-444444444444"
+        val detail="""{"id":"$animalId","code":"A","species":"Bovino","speciesId":"$species","sex":"DESCONOCIDO","status":"ACTIVO","farmId":"$farm","farmName":"Farm","version":0}"""
+        val first="""{"id":"55555555-5555-4555-8555-555555555555","text":"First","date":"2026-01-01"}"""
+        val second="""{"id":"66666666-6666-4666-8666-666666666666","text":"Second","authorName":"","date":"2026-01-01"}"""
+        server.enqueue(response(detail));server.enqueue(response(farmJson()));server.enqueue(response("[$second,$first]"))
+        val values=repository.observations(animalId);assertEquals(listOf("Second","First"),values.map {it.text});assertTrue(values.all {it.authorName==null})
+        for(note in listOf(first.replace("2026-01-01","2026-02-30"),first.replace("55555555-5555-4555-8555-555555555555","bad"),first.replace("First"," "))) {
+            server.enqueue(response(detail));server.enqueue(response(farmJson()));server.enqueue(response("[$note]"));assertEquals(AuthProblem.INVALID_RESPONSE,(runCatching {repository.observations(animalId)}.exceptionOrNull() as AuthFailure).problem)
+        }
+        server.enqueue(response(detail));server.enqueue(response(farmJson()));server.enqueue(response("[$first,$first]"));assertTrue(runCatching {repository.observations(animalId)}.exceptionOrNull() is AuthFailure)
+    }
 }

@@ -1,0 +1,17 @@
+<resources>
+    <string name="obs_title">Observaciones</string>
+    <string name="obs_add">Agregar observación</string>
+    <string name="obs_all">Ver todas (%1$d)</string>
+    <string name="obs_hint">Anota cambios que notes en el comportamiento o estado del animal</string>
+    <string name="obs_info">Describe lo que has notado en tu animal. Esta nota quedará en su ficha.</string>
+    <string name="obs_label">Observación *</string>
+    <string name="obs_invalid">Escribe una observación con contenido.</string>
+    <string name="obs_save">Guardar observación</string>
+    <string name="obs_empty">Todavía no hay observaciones.</string>
+    <string name="obs_read_error">No se pudieron cargar las observaciones.</string>
+    <string name="obs_save_error">No se pudo guardar la observación.</string>
+    <string name="obs_uncertain">Registro sin confirmar. Consulta las observaciones antes de decidir otro intento. No se reenviará automáticamente.</string>
+    <string name="obs_check">Consultar observaciones</string>
+    <string name="obs_allow">Ya revisé la lista: permitir un nuevo intento manual</string>
+    <string name="obs_saving">Guardando observación&#8230;</string>
+</resources>

@@ -77,4 +77,26 @@ class LivestockRepositoryImpl(private val api: LivestockApi,private val requests
                 if("birthDate" in animalInputErrors(NewAnimal(farmId,this.id(d.speciesId),AnimalSex.DESCONOCIDO,birthDate=it))) invalid()
             },AnimalStatus.entries.firstOrNull {it.name==d.status} ?: invalid(),farmId,text(d.farmName),count(d.version),d.photoUrl)
     }
+    private fun observation(d: ObservationDto): AnimalObservation {
+        val date=d.date?.also {
+            val parser=SimpleDateFormat("yyyy-MM-dd",Locale.US).apply {isLenient=false;timeZone=java.util.TimeZone.getTimeZone("UTC")}
+            val position=java.text.ParsePosition(0)
+            if(!it.matches(Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}")) || parser.parse(it,position)==null || position.index!=it.length) invalid()
+        }
+        return AnimalObservation(id(d.id),text(d.text),d.authorName?.takeIf(String::isNotBlank),date)
+    }
+    override suspend fun observations(id: String): List<AnimalObservation> = mapped {
+        animal(id) // Confirm owned farm before exposing the full history, like the detail path.
+        requests.execute {expected(api.observations(it,this.id(id)))}.map(::observation).also {items->
+            if(items.map {it.id}.distinct().size!=items.size) invalid()
+        } // Preserve server order, including equal-date entries. No invented page/sort parameters.
+    }
+    override suspend fun addObservation(id: String,text: String): AnimalObservation {
+        if(!validObservationText(text)) throw AuthFailure(AuthProblem.SERVER,400,"VALIDATION_ERROR")
+        return mapped {
+            animal(id)
+            observation(requests.execute {expected(api.addObservation(it,this.id(id),ObservationRequest(text)),201)})
+        }
+    }
+
 }
