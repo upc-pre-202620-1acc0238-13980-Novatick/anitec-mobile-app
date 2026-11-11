@@ -10,7 +10,14 @@ import pe.novatick.anitec.features.auth.infrastructure.Envelope
 @Keep data class InventoryDto(val totalActive: Long?,val content: List<AnimalDto>?)
 @Keep data class CapacityDto(val ownerId: String?,val allowedAnimals: Long?,val activeAnimals: Long?,val lastPlanRevision: Long?)
 @Keep class CreateFarmRequest(val name: String,val location: String?)
+@Keep data class AnimalDataRequest(val farmId: String,val code: String?,val speciesId: String,val sex: String,
+    val name: String?,val breed: String?,val birthDate: String?,val photoUrl: String?)
+@Keep data class AnimalDetailDto(val id: String?,val code: String?,val name: String?,val species: String?,val sex: String?,
+    val breed: String?,val birthDate: String?,val status: String?,val farmId: String?,val farmName: String?,val version: Long?,
+    val speciesId: String?,val photoUrl: String?)
 interface LivestockApi {
+    @POST("animals") suspend fun createAnimal(@Header("Authorization") bearer: String,@Body body: AnimalDataRequest): Response<Envelope<AnimalDto>>
+    @GET("animals/{id}") suspend fun animal(@Header("Authorization") bearer: String,@Path("id") id: String): Response<Envelope<AnimalDetailDto>>
     @GET("farms") suspend fun farms(@Header("Authorization") bearer: String): Response<Envelope<List<FarmDto>>>
     @GET("farms/{id}") suspend fun farm(@Header("Authorization") bearer: String,@Path("id") id: String): Response<Envelope<FarmDto>>
     @POST("farms") suspend fun createFarm(@Header("Authorization") bearer: String,@Body body: CreateFarmRequest): Response<Envelope<FarmDto>>

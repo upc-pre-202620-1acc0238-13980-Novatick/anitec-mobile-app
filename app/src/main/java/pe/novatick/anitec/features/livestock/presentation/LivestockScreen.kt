@@ -27,20 +27,27 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
 
 @Composable fun LivestockShell(vm: LivestockViewModel,profile: Profile,onLogout: ()->Unit) {
     val nav=rememberNavController();val entry by nav.currentBackStackEntryAsState()
-    val tab=when(entry?.destination?.route) { "cattle"->RancherTab.CATTLE;"profile"->RancherTab.PROFILE;"vets"->RancherTab.VETS;else->RancherTab.HOME }
+    val tab=when(entry?.destination?.route) { "cattle","animal_register","animal/{id}"->RancherTab.CATTLE;"profile"->RancherTab.PROFILE;"vets"->RancherTab.VETS;else->RancherTab.HOME }
     val state by vm.uiState.collectAsState();val type=MaterialTheme.typography
     val labels=mapOf(RancherTab.HOME to stringResource(R.string.ls_tab_home),RancherTab.CATTLE to stringResource(R.string.ls_tab_cattle),
         RancherTab.VETS to stringResource(R.string.ls_tab_vets),RancherTab.PROFILE to stringResource(R.string.ls_tab_profile))
     MaterialTheme(colorScheme=MaterialTheme.colorScheme.copy(primary=PrimaryGreen,onPrimary=Color.White,surface=Color.White),
         typography=type.copy(bodyLarge=type.bodyLarge.copy(fontFamily=Poppins),bodyMedium=type.bodyMedium.copy(fontFamily=Poppins),labelLarge=type.labelLarge.copy(fontFamily=Poppins))) {
         Scaffold(containerColor=Color.White,bottomBar={RancherBottomBar(tab,labels) { value ->
+            if(state.registering) return@RancherBottomBar
             nav.navigate(when(value) { RancherTab.HOME->"home";RancherTab.CATTLE->"cattle";RancherTab.PROFILE->"profile";RancherTab.VETS->"vets" }) { launchSingleTop=true;popUpTo("home") }
         }}) { padding -> Box(Modifier.padding(padding).consumeWindowInsets(padding)) { NavHost(nav,startDestination="home") {
             composable("home") { pe.novatick.anitec.RancherHomeScreen(onNavigateToCattle={nav.navigate("cattle")},onNavigateToLinkedVets={},
                 onNavigateToRegisterAnimal={},onNavigateToInviteVets={},onNavigateToVisits={},onNavigateToVisitDetail={},onNavigateToIndicationDetail={},
                 profileName=profile.name,profileInitials=livestockInitials(profile.name,profile.lastName),
-                livestockContent={ LivestockHomeSummary(state.capacity,onRetry=vm::refreshFoundation) {nav.navigate("cattle")} }) }
-            composable("cattle") {pe.novatick.anitec.RancherCattleScreen({}, {},state,vm)}
+                livestockContent={ LivestockHomeSummary(state.capacity,onRegister={vm.beginAnimal();nav.navigate("animal_register")},onRetry=vm::refreshFoundation) {nav.navigate("cattle")} }) }
+            composable("cattle") {LivestockInventoryScreen(state,vm,onRegister={vm.beginAnimal();nav.navigate("animal_register")},onAnimal={nav.navigate("animal/$it")})}
+            composable("animal_register") {AnimalRegistrationScreen(state,vm,{nav.popBackStack()}) {nav.navigate("animal/$it") {popUpTo("animal_register") {inclusive=true}}}}
+            composable("animal/{id}") {back -> val id=back.arguments?.getString("id").orEmpty()
+                LaunchedEffect(id) {vm.readAnimal(id)}
+                val selected=if(state.animalDetailId==id) state else state.copy(animalDetail=ReadState(loading=true),animalDetailError=null)
+                AnimalDetailScreen(selected,{nav.popBackStack()}) {vm.readAnimal(id)}
+            }
             composable("profile") {RancherProfileScreen(userName=profile.name+" "+profile.lastName,userEmail=profile.email,onLogoutClick=onLogout)}
             composable("vets") {LsEmpty(stringResource(R.string.ls_pending),stringResource(R.string.ls_future))}
         } } }
@@ -55,7 +62,7 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
     }
     if(showError && value.failed) LsNotice(stringResource(if(value.stale) R.string.ls_stale else R.string.ls_error),true)
 }
-@Composable internal fun LivestockHomeSummary(value: ReadState<Capacity>,onRetry: ()->Unit={},onInventory: ()->Unit) {
+@Composable internal fun LivestockHomeSummary(value: ReadState<Capacity>,onRetry: ()->Unit={},onRegister: ()->Unit={},onInventory: ()->Unit) {
     value.value?.let { capacity ->
         Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             Metric(capacity.activeAnimals,stringResource(R.string.ls_metric_active),R.drawable.ic_cow,Modifier.weight(1f).testTag("home_inventory_active"),onInventory)
@@ -67,7 +74,7 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
         LsNotice(stringResource(R.string.ls_partial_error),true)
         LsReadIssue(stringResource(R.string.ls_capacity_error),value.stale,onRetry)
     }
-    LivestockHomeSections()
+    LivestockHomeSections(onRegister)
 
 }
 @Composable private fun Metric(value: Long,label: String,icon: Int,modifier: Modifier,onClick: ()->Unit) {
@@ -101,10 +108,10 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
 @Composable private fun stateName(status: AnimalStatus): String = stringResource(when(status) {
     AnimalStatus.ACTIVO->R.string.ls_active;AnimalStatus.INACTIVO->R.string.ls_inactive;AnimalStatus.VENDIDO->R.string.ls_sold;AnimalStatus.FALLECIDO->R.string.ls_dead
 })
-@Composable internal fun AnimalRow(animal: AnimalSummary,speciesName: String=animal.species) {
+@Composable internal fun AnimalRow(animal: AnimalSummary,speciesName: String=animal.species,onClick: (()->Unit)?=null) {
     val background=when(animal.status) {AnimalStatus.ACTIVO->LivestockVisuals.Mint;AnimalStatus.INACTIVO->LivestockVisuals.Pale;AnimalStatus.VENDIDO->Color(0xFFFFF7DF);AnimalStatus.FALLECIDO->Color(0xFFFFF0F0)}
     val foreground=when(animal.status) {AnimalStatus.ACTIVO->PrimaryGreen;AnimalStatus.INACTIVO->LivestockVisuals.Secondary;AnimalStatus.VENDIDO->Color(0xFF806014);AnimalStatus.FALLECIDO->Color(0xFFAE4141)}
-    Surface(Modifier.fillMaxWidth().testTag("animal_${animal.id}"),shape=RoundedCornerShape(15.dp),color=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border)) {
+    Surface(Modifier.fillMaxWidth().testTag("animal_${animal.id}").then(if(onClick!=null) Modifier.clickable(onClick=onClick) else Modifier),shape=RoundedCornerShape(15.dp),color=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border)) {
         Row(Modifier.heightIn(min=76.dp).padding(10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             Box(Modifier.size(41.dp).background(LivestockVisuals.Mint,RoundedCornerShape(12.dp)),contentAlignment=Alignment.Center) {
                 Icon(painterResource(livestockSpeciesIcon(speciesName)),null,tint=Color.Unspecified,modifier=Modifier.size(29.dp))
@@ -115,10 +122,11 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
                 Text(animal.code+" - "+animal.species,fontFamily=Poppins,fontSize=11.sp,color=LivestockVisuals.Secondary,maxLines=1,overflow=TextOverflow.Ellipsis)
             }
             LsText(stringResource(when(animal.status) { AnimalStatus.ACTIVO->R.string.ls_badge_active;AnimalStatus.INACTIVO->R.string.ls_badge_inactive;AnimalStatus.VENDIDO->R.string.ls_badge_sold;AnimalStatus.FALLECIDO->R.string.ls_badge_dead }),Modifier.background(background,RoundedCornerShape(10.dp)).padding(horizontal=8.dp,vertical=5.dp),size=10,bold=true,color=foreground)
+            if(onClick!=null) Icon(painterResource(R.drawable.ls_chevron_official),null,tint=Color.Unspecified,modifier=Modifier.size(8.25.dp,14.5.dp))
         }
     }
 }
-@Composable fun LivestockInventoryScreen(state: LivestockState,vm: LivestockViewModel) {
+@Composable fun LivestockInventoryScreen(state: LivestockState,vm: LivestockViewModel,onRegister: ()->Unit={},onAnimal: ((String)->Unit)?=null) {
     val unavailable=rememberLivestockUnavailableAction()
     var farmsOpen by remember {mutableStateOf(false)};var createOpen by remember {mutableStateOf(false)}
     var name by remember {mutableStateOf("")};var location by remember {mutableStateOf("")};var attempted by remember {mutableStateOf(false)}
@@ -139,7 +147,7 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
             CapacitySummary(state.capacity,showError=false)
             if(state.capacity.failed) LsReadIssue(stringResource(R.string.ls_capacity_error),state.capacity.stale,vm::refreshFoundation)
             LsSearch(state.filter.search) {vm.filter(state.filter.copy(search=it),true)}
-            LsAction(stringResource(R.string.ls_register_animal),unavailable,Modifier.fillMaxWidth(),primary=true,icon=R.drawable.ls_plus_official)
+            LsAction(stringResource(R.string.ls_register_animal),onRegister,Modifier.fillMaxWidth(),primary=true,icon=R.drawable.ls_plus_official)
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                 Box(Modifier.weight(1f)) {Choice(state.farms.value?.firstOrNull {it.id==state.filter.farmId}?.name ?: stringResource(if(state.filter.farmId==null) R.string.ls_all_farms else R.string.ls_selected_farm),
                     "farm_filter",listOf(stringResource(R.string.ls_all_farms) to null)+state.farms.value.orEmpty().map {it.name to it.id},vm::selectFarm)}
@@ -170,7 +178,7 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
                     LsEmpty(stringResource(if(filtered) R.string.ls_no_results else R.string.ls_no_animals),stringResource(if(filtered) R.string.ls_empty_search_hint else R.string.ls_empty_inventory_hint))
                     if(filtered) TextButton(onClick={vm.filter(InventoryFilter(farmId=state.filter.farmId))},modifier=Modifier.align(Alignment.CenterHorizontally)) {LsText(stringResource(R.string.ls_clear_filters),color=PrimaryGreen,bold=true)}
                 }
-                data.content.forEach { animal -> AnimalRow(animal,state.species.value?.firstOrNull {it.id==animal.speciesId}?.name ?: animal.species) }
+                data.content.forEach { animal -> AnimalRow(animal,state.species.value?.firstOrNull {it.id==animal.speciesId}?.name ?: animal.species,onAnimal?.let {callback->{callback(animal.id)}}) }
             }
         }
     }
