@@ -47,4 +47,22 @@ class AnimalObservationUiTest {
         compose.onNodeWithTag("observation_save").assertIsNotEnabled()
         compose.onNodeWithText(text("en",R.string.ls_cancel)).assertIsNotEnabled()
     }
+    @Test fun placeholderIsDecorationAndHeaderStaysVisibleWithKeyboardAndScroll() {
+        open("en","obs-uncertain")
+        compose.onNodeWithText(text("en",R.string.obs_placeholder)).assertExists()
+        compose.onNodeWithTag("observation_text").performTextInput("Draft QA")
+        compose.onNodeWithText(text("en",R.string.obs_placeholder)).assertDoesNotExist()
+        compose.onNodeWithTag("observation_save").performScrollTo().performClick()
+        compose.onNodeWithText(text("en",R.string.obs_check)).performScrollTo().performClick()
+        compose.onNodeWithText(text("en",R.string.ls_cancel)).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("animal_header_title").assertIsDisplayed()
+        compose.onNodeWithTag("observation_save").performScrollTo().assertIsDisplayed().assertIsNotEnabled()
+    }
+    @Test fun unknownCountIsNotPresentedAsEmpty() {
+        compose.setContent {LivestockLocaleFixture("en",LivestockReviewRepository("obs-error"))}
+        compose.onNodeWithText(text("en",R.string.ls_tab_cattle)).performClick()
+        compose.onNodeWithText("Luna").performScrollTo().performClick()
+        compose.onNodeWithText("View all (0)").assertDoesNotExist()
+        compose.onNodeWithText(text("en",R.string.obs_all_unknown)).assertExists()
+    }
 }

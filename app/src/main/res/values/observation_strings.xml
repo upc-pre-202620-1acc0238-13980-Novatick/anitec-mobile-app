@@ -14,4 +14,6 @@
     <string name="obs_check">Consultar observaciones</string>
     <string name="obs_allow">Ya revisé la lista: permitir un nuevo intento manual</string>
     <string name="obs_saving">Guardando observación&#8230;</string>
+    <string name="obs_placeholder">Escribe aquí tu observación&#8230;</string>
+    <string name="obs_all_unknown">Ver todas</string>
 </resources>

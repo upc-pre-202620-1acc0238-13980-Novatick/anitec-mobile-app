@@ -42,11 +42,9 @@ import pe.novatick.anitec.ui.theme.Poppins
     }
 }
 @Composable internal fun AnimalPage(title: String,back: ()->Unit,busy: Boolean=false,subtitle: String?=null,
-    centered: Boolean=false,actions: (@Composable ()->Unit)?=null,content: @Composable ColumnScope.()->Unit) {
+    centered: Boolean=false,actions: (@Composable ()->Unit)?=null,pinnedHeader: Boolean=false,content: @Composable ColumnScope.()->Unit) {
     BackHandler(busy) {}
-    Column(Modifier.fillMaxSize().background(Color.White).imePadding().verticalScroll(rememberScrollState())) {
-        Box(Modifier.fillMaxWidth().height(30.dp).clip(CattleHeaderShape).background(pe.novatick.anitec.ui.theme.PrimaryGreenAccent))
-        Column(Modifier.padding(horizontal=28.dp,vertical=8.dp),verticalArrangement=Arrangement.spacedBy(13.dp)) {
+    val heading: @Composable ()->Unit = {
             Row(Modifier.fillMaxWidth().heightIn(min=62.dp).testTag("animal_header"),verticalAlignment=Alignment.CenterVertically) {
                 AnimalNavigationButton(R.drawable.ic_arrow_left,stringResource(R.string.animal_back),!busy,back)
                 Column(Modifier.weight(1f),horizontalAlignment=if(centered) Alignment.CenterHorizontally else Alignment.Start) {
@@ -57,8 +55,13 @@ import pe.novatick.anitec.ui.theme.Poppins
                 }
                 if(actions!=null) actions() else if(centered) Spacer(Modifier.width(48.dp))
             }
-            content()
-        }
+    }
+    Column(Modifier.fillMaxSize().background(Color.White).imePadding().then(if(pinnedHeader) Modifier else Modifier.verticalScroll(rememberScrollState()))) {
+        Box(Modifier.fillMaxWidth().height(30.dp).clip(CattleHeaderShape).background(pe.novatick.anitec.ui.theme.PrimaryGreenAccent))
+        if(pinnedHeader) {
+            Column(Modifier.padding(horizontal=28.dp,vertical=8.dp)) {heading()}
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal=28.dp,vertical=8.dp),verticalArrangement=Arrangement.spacedBy(13.dp),content=content)
+        } else Column(Modifier.padding(horizontal=28.dp,vertical=8.dp),verticalArrangement=Arrangement.spacedBy(13.dp)) {heading();content()}
     }
 }
 @Composable internal fun AnimalSelect(label: String,value: String,choices: List<Pair<String,String>>,enabled: Boolean,tag: String,onSelect: (String)->Unit) {

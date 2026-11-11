@@ -14,4 +14,6 @@
     <string name="obs_check">Check observations</string>
     <string name="obs_allow">I checked the list: allow a new manual attempt</string>
     <string name="obs_saving">Saving observation&#8230;</string>
+    <string name="obs_placeholder">Write your observation here&#8230;</string>
+    <string name="obs_all_unknown">View all</string>
 </resources>

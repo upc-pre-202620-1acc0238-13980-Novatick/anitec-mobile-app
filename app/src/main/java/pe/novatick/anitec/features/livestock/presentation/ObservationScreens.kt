@@ -11,6 +11,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.*
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.TextStyle
@@ -25,7 +26,7 @@ import pe.novatick.anitec.ui.theme.*
             Box(Modifier.width(3.dp).fillMaxHeight().background(PrimaryGreenAccent))
             Column(Modifier.weight(1f).padding(horizontal=16.dp,vertical=10.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
                 LsText(item.text,size=11)
-                val metadata=listOfNotNull(item.authorName,item.date).joinToString(" \u00B7 ")
+                val metadata=listOfNotNull(item.authorName,item.date?.let {formatObservationDate(it,LocalConfiguration.current.locale)}).joinToString(" \u00B7 ")
                 if(metadata.isNotBlank()) LsText(metadata,size=9,color=LivestockVisuals.Secondary)
             }
         }
@@ -35,7 +36,7 @@ import pe.novatick.anitec.ui.theme.*
     val current=if(state.animalId==id) state.items else ReadState(loading=true)
     Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
         LsText(stringResource(R.string.obs_title),Modifier.weight(1f),bold=true)
-        TextButton(onClick=all,enabled=!state.busy) {LsText(stringResource(R.string.obs_all,current.value?.size ?: 0),size=10,color=PrimaryGreen)}
+        TextButton(onClick=all,enabled=!state.busy) {LsText(if(current.value==null) stringResource(R.string.obs_all_unknown) else stringResource(R.string.obs_all,current.value.size),size=10,color=PrimaryGreen)}
     }
     LsText(stringResource(R.string.obs_hint),size=10,color=LivestockVisuals.Secondary)
     ObservationContent(current,{vm.load(id)},recent=true)
@@ -57,18 +58,18 @@ import pe.novatick.anitec.ui.theme.*
     }
 }
 @Composable fun ObservationListScreen(id: String,state: ObservationState,vm: AnimalObservationViewModel,back: ()->Unit,add: ()->Unit) {
-    AnimalPage(stringResource(R.string.obs_title),back,centered=true) {
+    AnimalPage(stringResource(R.string.obs_title),back,centered=true,pinnedHeader=true) {
         ObservationContent(if(state.animalId==id) state.items else ReadState(loading=true),{vm.load(id)})
         ObservationAddButton(add,!state.busy)
     }
 }
 @Composable fun ObservationForm(animal: AnimalDetail?,state: ObservationState,vm: AnimalObservationViewModel,back: ()->Unit,confirmed: ()->Unit) {
-    if(animal==null) {AnimalPage(stringResource(R.string.obs_add),back,centered=true) {LsNotice(stringResource(R.string.animal_missing),true)};return}
+    if(animal==null) {AnimalPage(stringResource(R.string.obs_add),back,centered=true,pinnedHeader=true) {LsNotice(stringResource(R.string.animal_missing),true)};return}
     var text by remember(animal.id) {mutableStateOf("")};var attempted by remember(animal.id) {mutableStateOf(false)}
     val error=state.errors[animal.id]
     LaunchedEffect(state.confirmedFor) {if(state.confirmedFor==animal.id) {vm.begin();confirmed()}}
     BackHandler(state.busy) {}
-    AnimalPage(stringResource(R.string.obs_add),back,busy=state.busy,centered=true) {
+    AnimalPage(stringResource(R.string.obs_add),back,busy=state.busy,centered=true,pinnedHeader=true) {
         Surface(Modifier.fillMaxWidth(),shape=RoundedCornerShape(18.dp),border=BorderStroke(1.dp,LivestockVisuals.Border),color=Color.White) {
             Row(Modifier.padding(10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(15.dp)) {
                 AnimalSpeciesImage(animal.species,animal.photoUrl)
@@ -82,7 +83,7 @@ import pe.novatick.anitec.ui.theme.*
         LsText(stringResource(R.string.obs_label),size=12)
         val label=stringResource(R.string.obs_label)
         BasicTextField(text,{text=it},enabled=!state.busy,textStyle=TextStyle(fontFamily=Poppins,fontSize=12.sp,color=LivestockVisuals.Ink),cursorBrush=SolidColor(PrimaryGreen),
-            modifier=Modifier.fillMaxWidth().heightIn(min=90.dp).background(LivestockVisuals.Pale,RoundedCornerShape(13.dp)).padding(13.dp).testTag("observation_text").semantics {contentDescription=label})
+            modifier=Modifier.fillMaxWidth().heightIn(min=90.dp).background(LivestockVisuals.Pale,RoundedCornerShape(13.dp)).padding(13.dp).testTag("observation_text").semantics {contentDescription=label},decorationBox={inner -> Box {if(text.isEmpty()) LsText(stringResource(R.string.obs_placeholder),size=12,color=LivestockVisuals.Secondary);inner()}})
         if(attempted && !validObservationText(text)) LsText(stringResource(R.string.obs_invalid),size=11,color=Color(0xFFAE4141))
         if(error!=null) LsNotice(when {
             error.code=="UNCERTAIN"->stringResource(R.string.obs_uncertain)
