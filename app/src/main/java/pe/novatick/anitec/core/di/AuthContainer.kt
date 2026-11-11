@@ -14,32 +14,18 @@ import java.util.concurrent.TimeUnit
 
 /** Manual application-scoped DI; no extra DI framework or business feature migration. */
 class AuthContainer(context: Context) {
-    private val client=OkHttpClient.Builder().connectTimeout(10,TimeUnit.SECONDS).readTimeout(10,TimeUnit.SECONDS)
-        .callTimeout(15,TimeUnit.SECONDS).retryOnConnectionFailure(false).followRedirects(false).followSslRedirects(false).build()
-    private val api: AuthApi=if(BuildConfig.DEBUG) Retrofit.Builder()
-        .baseUrl("http://10.0.2.2:18080/api/v1/")
-        .client(client).addConverterFactory(GsonConverterFactory.create()).build().create(AuthApi::class.java) else UnconfiguredReleaseApi()
+    private val pool=okhttp3.ConnectionPool()
+    private val client=pe.novatick.anitec.core.environment.VariantAccess.configure(OkHttpClient.Builder().connectTimeout(10,TimeUnit.SECONDS).readTimeout(10,TimeUnit.SECONDS)
+        .callTimeout(15,TimeUnit.SECONDS).connectionPool(pool).addInterceptor(pe.novatick.anitec.core.network.ReadEofRecovery(pool)).eventListenerFactory(if(BuildConfig.DEBUG) pe.novatick.anitec.core.network.NetworkDiagnostics.factory else okhttp3.EventListener.Factory { okhttp3.EventListener.NONE }).retryOnConnectionFailure(false).followRedirects(false).followSslRedirects(false)).build()
+    private val retrofit = Retrofit.Builder().baseUrl(BuildConfig.API_BASE_URL).client(client)
+        .addConverterFactory(GsonConverterFactory.create()).build()
+    private val api: AuthApi=retrofit.create(AuthApi::class.java)
     val registration = RegistrationRepositoryImpl(api)
     // Keep the closing-generation guard for the whole process, including Activity recreation.
     val repository: AuthRepositoryImpl = synchronized(AuthContainer::class.java) {
         shared ?: AuthRepositoryImpl(api,KeystoreSessionStore(context.applicationContext)).also { shared=it }
     }
-    val livestock: pe.novatick.anitec.features.livestock.domain.LivestockRepository? = if(BuildConfig.DEBUG) {
-        val privateApi=Retrofit.Builder().baseUrl("http://10.0.2.2:18080/api/v1/").client(client)
-            .addConverterFactory(GsonConverterFactory.create()).build().create(pe.novatick.anitec.features.livestock.infrastructure.LivestockApi::class.java)
-        pe.novatick.anitec.features.livestock.infrastructure.LivestockRepositoryImpl(privateApi,repository) { repository.profile.value?.id }
-    } else null
+    val livestock = pe.novatick.anitec.features.livestock.infrastructure.LivestockRepositoryImpl(
+        retrofit.create(pe.novatick.anitec.features.livestock.infrastructure.LivestockApi::class.java),repository) {repository.profile.value?.id}
     companion object { @Volatile private var shared: AuthRepositoryImpl? = null }
-}
-
-/** No production origin has been authorized. Do not turn the documentation placeholder into an API host. */
-private class UnconfiguredReleaseApi : AuthApi {
-    private fun unavailable(): Nothing = throw AuthFailure(AuthProblem.SERVER,code="CLIENT_ENVIRONMENT_NOT_CONFIGURED")
-    override suspend fun register(body: RegisterRequest,language: String): Response<Envelope<RegisterDto>> = unavailable()
-    override suspend fun verify(body: VerifyRequest): Response<Envelope<Unit>> = unavailable()
-    override suspend fun resend(body: ResendRequest,language: String): Response<Envelope<ResendDto>> = unavailable()
-    override suspend fun login(body: LoginRequest): Response<Envelope<LoginDto>> = unavailable()
-    override suspend fun refresh(body: RefreshRequest): Response<Envelope<TokenDto>> = unavailable()
-    override suspend fun logout(body: LogoutRequest): Response<Envelope<Unit>> = unavailable()
-    override suspend fun me(bearer: String): Response<Envelope<ProfileDto>> = unavailable()
 }
