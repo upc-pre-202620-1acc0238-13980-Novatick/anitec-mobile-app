@@ -1,0 +1,14 @@
+<resources>
+    <string name="staging_internal_label">Alpha interna · Render</string>
+    <string name="staging_access">Acceso</string>
+    <string name="staging_setup_title">Acceso privado de staging</string>
+    <string name="staging_setup_info">Introduce la clave privada únicamente aquí. Se conserva solo en memoria y debe introducirse de nuevo al reiniciar la aplicación. No sustituye tu cuenta ANITEC. No la compartas en el chat.</string>
+    <string name="staging_key_label">Clave de staging</string>
+    <string name="staging_setup_failed">No se pudo validar el acceso. Comprueba la clave y la conexión. No se cambió el acceso anterior.</string>
+    <string name="staging_validate">Validar y continuar</string>
+    <string name="staging_cancel">Cancelar</string>
+    <string name="staging_remove">Eliminar clave de la memoria</string>
+    <string name="staging_refresh_session">Actualizar sesión</string>
+    <string name="staging_session_updated">Sesión actualizada en el servidor.</string>
+    <string name="staging_session_failed">No se pudo actualizar la sesión. Comprueba tu acceso e inicia sesión si es necesario.</string>
+</resources>

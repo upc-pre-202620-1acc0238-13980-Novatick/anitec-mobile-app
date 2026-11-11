@@ -1,0 +1,14 @@
+<resources>
+    <string name="staging_internal_label">Internal Alpha · Render</string>
+    <string name="staging_access">Access</string>
+    <string name="staging_setup_title">Private staging access</string>
+    <string name="staging_setup_info">Enter the private key only here. It stays in memory and must be entered again after the app process restarts. It does not replace your ANITEC account. Do not share it in chat.</string>
+    <string name="staging_key_label">Staging key</string>
+    <string name="staging_setup_failed">Access could not be validated. Check the key and connection. Previous access was not changed.</string>
+    <string name="staging_validate">Validate and continue</string>
+    <string name="staging_cancel">Cancel</string>
+    <string name="staging_remove">Remove key from memory</string>
+    <string name="staging_refresh_session">Refresh session</string>
+    <string name="staging_session_updated">Session refreshed on the server.</string>
+    <string name="staging_session_failed">The session could not be refreshed. Check access and sign in if needed.</string>
+</resources>

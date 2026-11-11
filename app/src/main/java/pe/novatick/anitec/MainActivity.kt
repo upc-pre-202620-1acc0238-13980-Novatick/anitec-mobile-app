@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var authModel: AuthViewModel
     override fun onStart() {
         super.onStart()
-        if (::authModel.isInitialized) authModel.restore()
+        if (::authModel.isInitialized && pe.novatick.anitec.core.environment.VariantAccess.isReady()) authModel.restore()
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,11 +35,16 @@ class MainActivity : ComponentActivity() {
                     else AuthViewModel(container.repository)))
             }
         })
-        val vm=provider[AuthViewModel::class.java]
-        val registration=provider[RegistrationViewModel::class.java]
-        authModel=vm
         enableEdgeToEdge()
-        setContent { AniTecTheme { AniTecAppNavigation(vm,registration,container.livestock) } }
+        setContent { AniTecTheme {
+            pe.novatick.anitec.core.environment.VariantAccess.Gate(refresh={container.repository.refresh()}) {
+                val vm=remember {provider[AuthViewModel::class.java]}
+                val registration=remember {provider[RegistrationViewModel::class.java]}
+                SideEffect {authModel=vm}
+                LaunchedEffect(Unit) {vm.restore()}
+                AniTecAppNavigation(vm,registration,container.livestock)
+            }
+        } }
     }
 }
 
@@ -59,7 +64,7 @@ fun AniTecAppNavigation(vm: AuthViewModel,registration: RegistrationViewModel?=n
     key(profile?.id,profile?.role) {
         if(profile != null) {
             Column(Modifier.fillMaxSize()) {
-                Text(stringResource(if(BuildConfig.API_ENVIRONMENT=="LAB") R.string.alpha_lab else R.string.alpha_staging),modifier=Modifier.statusBarsPadding())
+                if(BuildConfig.DEBUG && BuildConfig.API_ENVIRONMENT=="LAB") Text(stringResource(if(BuildConfig.API_ENVIRONMENT=="LAB") R.string.alpha_lab else R.string.alpha_staging),modifier=Modifier.statusBarsPadding())
                 Box(Modifier.weight(1f)) {
                     when(profile!!.role) {
                         Role.GANADERO -> RancherMainContainer(onNavigateToLogin=onLogout,livestock=livestock,profile=profile)

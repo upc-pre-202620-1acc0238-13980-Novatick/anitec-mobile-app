@@ -27,7 +27,7 @@ android {
         create("alpha") {
             initWith(getByName("debug"))
             applicationIdSuffix = ".alpha.staging"
-            versionNameSuffix = "-alpha-staging"
+            versionNameSuffix = "-alpha-staging-rc2"
             buildConfigField("String", "API_BASE_URL", "\"https://anitec-staging.onrender.com/api/v1/\"")
             buildConfigField("String", "API_ENVIRONMENT", "\"STAGING\"")
         }
@@ -54,6 +54,12 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+}
+
+androidComponents {
+    beforeVariants(selector().withBuildType("alpha")) { builder ->
+        (builder as com.android.build.api.variant.HasHostTestsBuilder).hostTests.getValue("UnitTest").enable = true
     }
 }
 
