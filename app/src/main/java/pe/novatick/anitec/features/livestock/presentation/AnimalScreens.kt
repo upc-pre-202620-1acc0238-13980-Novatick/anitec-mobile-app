@@ -229,14 +229,14 @@ import pe.novatick.anitec.ui.theme.Poppins
     }
 }
 @Composable fun AnimalDetailScreen(state: LivestockState,back: ()->Unit,retry: ()->Unit,
-    edit: ()->Unit={},deactivate: (AnimalDetail)->Unit={},reloadMutation: ()->Unit={},consumeMutation: ()->Unit={},observations: @Composable (String)->Unit={}) {
+    edit: ()->Unit={},deactivate: (AnimalDetail)->Unit={},reloadMutation: ()->Unit={},consumeMutation: ()->Unit={},readOnly: Boolean=false,observations: @Composable (String)->Unit={}) {
     var confirm by remember(state.animalDetailId) {mutableStateOf(false)}
     LaunchedEffect(state.mutation.completed) {if(state.mutation.completed=="DEACTIVATE") confirm=false}
     val current=state.animalDetail.value
-    if(confirm && current!=null) AnimalDeactivationDialog(current,state.mutation,{if(!state.mutation.busy) confirm=false},{deactivate(current)})
+    if(!readOnly && confirm && current!=null) AnimalDeactivationDialog(current,state.mutation,{if(!state.mutation.busy) confirm=false},{deactivate(current)})
     BackHandler(state.mutation.busy) {}
     AnimalPage(state.animalDetail.value?.let {it.name?.takeIf(String::isNotBlank) ?: it.code} ?: stringResource(R.string.animal_detail),back,
-        subtitle=state.animalDetail.value?.let {it.code+" · "+it.species},centered=true,busy=state.mutation.busy,actions=if(state.animalDetail.value!=null) {{AnimalOptions(!state.mutation.busy,state.animalDetail.value.status==AnimalStatus.ACTIVO,edit) {consumeMutation();confirm=true}}} else null) {
+        subtitle=state.animalDetail.value?.let {it.code+" · "+it.species},centered=true,busy=state.mutation.busy,actions=if(state.animalDetail.value!=null && !readOnly) {{AnimalOptions(!state.mutation.busy,state.animalDetail.value.status==AnimalStatus.ACTIVO,edit) {consumeMutation();confirm=true}}} else null) {
         state.mutation.error?.let {LsNotice(animalMutationFailureText(it),true);LsAction(stringResource(R.string.animal_reload),reloadMutation)}
         if(state.mutation.completed=="DEACTIVATE") LsNotice(stringResource(R.string.animal_deactivated))
         if(state.animalDetail.loading) LsLoading(stringResource(R.string.ls_loading))

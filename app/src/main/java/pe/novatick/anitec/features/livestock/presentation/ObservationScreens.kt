@@ -57,6 +57,19 @@ import pe.novatick.anitec.ui.theme.*
         Spacer(Modifier.width(8.dp));LsText(stringResource(R.string.obs_add),size=12,bold=true,color=PrimaryGreen)
     }
 }
+/** Shared history presentation with no mutation controls or owner ViewModel. */
+@Composable internal fun ReadOnlyObservationSection(value: ReadState<List<AnimalObservation>>,retry: ()->Unit,all: ()->Unit) {
+    Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+        LsText(stringResource(R.string.obs_title),Modifier.weight(1f),bold=true)
+        TextButton(onClick=all,modifier=Modifier.testTag("vet_observations_all")) {
+            LsText(if(value.value==null)stringResource(R.string.obs_all_unknown) else stringResource(R.string.obs_all,value.value.size),size=10,color=PrimaryGreen)
+        }
+    }
+    ObservationContent(value,retry,recent=true)
+}
+@Composable internal fun ReadOnlyObservationList(value: ReadState<List<AnimalObservation>>,retry: ()->Unit,back: ()->Unit) {
+    AnimalPage(stringResource(R.string.obs_title),back,centered=true,pinnedHeader=true) {ObservationContent(value,retry)}
+}
 @Composable fun ObservationListScreen(id: String,state: ObservationState,vm: AnimalObservationViewModel,back: ()->Unit,add: ()->Unit) {
     AnimalPage(stringResource(R.string.obs_title),back,centered=true,pinnedHeader=true) {
         ObservationContent(if(state.animalId==id) state.items else ReadState(loading=true),{vm.load(id)})

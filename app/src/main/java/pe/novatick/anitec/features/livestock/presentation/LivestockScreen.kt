@@ -25,9 +25,11 @@ import pe.novatick.anitec.ui.components.*
 import pe.novatick.anitec.ui.navigation.RancherTab
 import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
 
-@Composable fun LivestockShell(vm: LivestockViewModel,profile: Profile,onLogout: ()->Unit) {
+@Composable fun LivestockShell(vm: LivestockViewModel,profile: Profile,onLogout: ()->Unit,linking: pe.novatick.anitec.features.linking.domain.LinkingRepository?=null) {
+    val linkingVm=remember(linking,profile.id) {linking?.let {pe.novatick.anitec.features.linking.presentation.LinkingViewModel(it,profile.role)}}
+    DisposableEffect(linkingVm){linkingVm?.refresh();onDispose {linkingVm?.close()}}
     val nav=rememberNavController();val entry by nav.currentBackStackEntryAsState()
-    val tab=when(entry?.destination?.route) { "cattle","animal_register","animal/{id}","animal/{id}/edit","animal/{id}/observations","animal/{id}/observation/new"->RancherTab.CATTLE;"profile"->RancherTab.PROFILE;"vets"->RancherTab.VETS;else->RancherTab.HOME }
+    val tab=when(entry?.destination?.route) { "cattle","animal_register","animal/{id}","animal/{id}/edit","animal/{id}/observations","animal/{id}/observation/new"->RancherTab.CATTLE;"profile"->RancherTab.PROFILE;"vets","invite_vet"->RancherTab.VETS;else->RancherTab.HOME }
     val obs by vm.observations.uiState.collectAsState();val state by vm.uiState.collectAsState();val type=MaterialTheme.typography
     val labels=mapOf(RancherTab.HOME to stringResource(R.string.ls_tab_home),RancherTab.CATTLE to stringResource(R.string.ls_tab_cattle),
         RancherTab.VETS to stringResource(R.string.ls_tab_vets),RancherTab.PROFILE to stringResource(R.string.ls_tab_profile))
@@ -37,10 +39,10 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
             if(state.registering || state.mutation.busy || obs.busy) return@RancherBottomBar
             nav.navigate(when(value) { RancherTab.HOME->"home";RancherTab.CATTLE->"cattle";RancherTab.PROFILE->"profile";RancherTab.VETS->"vets" }) { launchSingleTop=true;popUpTo("home") }
         }}) { padding -> Box(Modifier.padding(padding).consumeWindowInsets(padding)) { NavHost(nav,startDestination="home") {
-            composable("home") { pe.novatick.anitec.RancherHomeScreen(onNavigateToCattle={nav.navigate("cattle")},onNavigateToLinkedVets={},
-                onNavigateToRegisterAnimal={},onNavigateToInviteVets={},onNavigateToVisits={},onNavigateToVisitDetail={},onNavigateToIndicationDetail={},
+            composable("home") { pe.novatick.anitec.RancherHomeScreen(onNavigateToCattle={nav.navigate("cattle")},onNavigateToLinkedVets={nav.navigate("vets")},
+                onNavigateToRegisterAnimal={},onNavigateToInviteVets={nav.navigate("invite_vet")},onNavigateToVisits={},onNavigateToVisitDetail={},onNavigateToIndicationDetail={},
                 profileName=profile.name,profileInitials=livestockInitials(profile.name,profile.lastName),
-                livestockContent={ LivestockHomeSummary(state.capacity,onRegister={vm.beginAnimal();nav.navigate("animal_register")},onRetry=vm::refreshFoundation) {nav.navigate("cattle")} }) }
+                livestockContent={ LivestockHomeSummary(state.capacity,onInvite={nav.navigate("invite_vet")},onRegister={vm.beginAnimal();nav.navigate("animal_register")},onRetry=vm::refreshFoundation) {nav.navigate("cattle")} }) }
             composable("cattle") {LivestockInventoryScreen(state,vm,onRegister={vm.beginAnimal();nav.navigate("animal_register")},onAnimal={nav.navigate("animal/$it")})}
             composable("animal_register") {AnimalRegistrationScreen(state,vm,{nav.popBackStack()}) {nav.navigate("animal/$it") {popUpTo("animal_register") {inclusive=true}}}}
             composable("animal/{id}") {back -> val id=back.arguments?.getString("id").orEmpty()
@@ -65,7 +67,8 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
                 ObservationForm(state.animalDetail.value?.takeIf {it.id==id},obs,vm.observations,{nav.popBackStack()}) {vm.readAnimal(id);nav.popBackStack()}
             }
             composable("profile") {RancherProfileScreen(userName=profile.name+" "+profile.lastName,userEmail=profile.email,onLogoutClick=onLogout)}
-            composable("vets") {LsEmpty(stringResource(R.string.ls_pending),stringResource(R.string.ls_future))}
+            composable("vets") {linkingVm?.let {pe.novatick.anitec.features.linking.presentation.RancherLinksScreen(it,{nav.navigate("invite_vet")})}}
+            composable("invite_vet") {linkingVm?.let {pe.novatick.anitec.features.linking.presentation.InviteVetScreen(it,{nav.popBackStack()})}}
         } } }
     }
 }
@@ -78,7 +81,7 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
     }
     if(showError && value.failed) LsNotice(stringResource(if(value.stale) R.string.ls_stale else R.string.ls_error),true)
 }
-@Composable internal fun LivestockHomeSummary(value: ReadState<Capacity>,onRetry: ()->Unit={},onRegister: ()->Unit={},onInventory: ()->Unit) {
+@Composable internal fun LivestockHomeSummary(value: ReadState<Capacity>,onRetry: ()->Unit={},onRegister: ()->Unit={},onInvite: ()->Unit={},onInventory: ()->Unit) {
     value.value?.let { capacity ->
         Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             Metric(capacity.activeAnimals,stringResource(R.string.ls_metric_active),R.drawable.ic_cow,Modifier.weight(1f).testTag("home_inventory_active"),onInventory)
@@ -90,7 +93,7 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
         LsNotice(stringResource(R.string.ls_partial_error),true)
         LsReadIssue(stringResource(R.string.ls_capacity_error),value.stale,onRetry)
     }
-    LivestockHomeSections(onRegister)
+    LivestockHomeSections(onRegister,onInvite)
 
 }
 @Composable private fun Metric(value: Long,label: String,icon: Int,modifier: Modifier,onClick: ()->Unit) {

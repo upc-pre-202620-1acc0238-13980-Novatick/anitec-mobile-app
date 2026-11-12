@@ -35,11 +35,11 @@ internal object LivestockVisuals {
     Text(value,modifier,fontFamily=Poppins,fontSize=size.sp,lineHeight=(size+5).sp,
         fontWeight=if(bold) FontWeight.SemiBold else FontWeight.Normal,color=color)
 }
-@Composable internal fun LsAction(label: String,onClick: ()->Unit,modifier: Modifier=Modifier,primary: Boolean=false,enabled: Boolean=true,icon: Int?=null) {
+@Composable internal fun LsAction(label: String,onClick: ()->Unit,modifier: Modifier=Modifier,primary: Boolean=false,enabled: Boolean=true,icon: Int?=null,iconSize: Int=20) {
     if(primary) Button(onClick,modifier.heightIn(min=48.dp),enabled=enabled,shape=RoundedCornerShape(14.dp),
         colors=ButtonDefaults.buttonColors(containerColor=PrimaryGreenAccent,contentColor=Color.White,
             disabledContainerColor=PrimaryGreenAccent.copy(alpha=0.22f),disabledContentColor=PrimaryGreen)) {
-        if(icon!=null) {Icon(painterResource(icon),null,modifier=Modifier.size(20.dp));Spacer(Modifier.width(8.dp))}
+        if(icon!=null) {Icon(painterResource(icon),null,modifier=Modifier.size(iconSize.dp));Spacer(Modifier.width(8.dp))}
         LsText(label,bold=true,color=if(enabled) Color.White else PrimaryGreen)
     } else OutlinedButton(onClick,modifier.heightIn(min=48.dp),enabled=enabled,shape=RoundedCornerShape(14.dp),
         border=BorderStroke(1.dp,PrimaryGreenAccent),colors=ButtonDefaults.outlinedButtonColors(contentColor=PrimaryGreen)) {

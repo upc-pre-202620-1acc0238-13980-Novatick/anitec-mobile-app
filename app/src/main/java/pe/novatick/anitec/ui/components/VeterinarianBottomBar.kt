@@ -35,7 +35,8 @@ import pe.novatick.anitec.ui.theme.PrimaryGreenAccent
 @Composable
 fun VeterinarianBottomBar(
     currentTab: VeterinarianTab,
-    onTabSelected: (VeterinarianTab) -> Unit
+    onTabSelected: (VeterinarianTab) -> Unit,
+    labels: Map<VeterinarianTab,String> = emptyMap()
 ) {
     Column(
         modifier = Modifier
@@ -82,7 +83,7 @@ fun VeterinarianBottomBar(
 
                     Icon(
                         painter = painterResource(id = tab.iconRes),
-                        contentDescription = tab.title,
+                        contentDescription = labels[tab] ?: tab.title,
                         tint = if (isSelected) PrimaryGreenAccent else Color(0xFF94A3B8),
                         modifier = Modifier.size(24.dp)
                     )
@@ -90,7 +91,7 @@ fun VeterinarianBottomBar(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = tab.title,
+                        text = labels[tab] ?: tab.title,
                         fontFamily = Poppins,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         fontSize = 11.sp,
