@@ -14,4 +14,4 @@ data class VisitDay(val start: Long,val end: Long) {
   }
  }
 }
-data class HomeVisit(val id: String,val animal: String?,val farmer: String,val time: Long,val status: String,val reason: String?)
+data class HomeVisit(val id: String,val animal: String?,val farmer: String,val time: Long,val status: String,val reason: String?,val animalId:String?=null,val farmerId:String?=null,val type:String="VISITA")

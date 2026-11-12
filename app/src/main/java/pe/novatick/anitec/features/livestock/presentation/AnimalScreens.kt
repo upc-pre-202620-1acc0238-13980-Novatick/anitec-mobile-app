@@ -42,13 +42,13 @@ import pe.novatick.anitec.ui.theme.Poppins
     }
 }
 @Composable internal fun AnimalPage(title: String,back: ()->Unit,busy: Boolean=false,subtitle: String?=null,
-    centered: Boolean=false,actions: (@Composable ()->Unit)?=null,pinnedHeader: Boolean=false,content: @Composable ColumnScope.()->Unit) {
+    centered: Boolean=false,actions: (@Composable ()->Unit)?=null,pinnedHeader: Boolean=false,titleSize:Int=21,content: @Composable ColumnScope.()->Unit) {
     BackHandler(busy) {}
     val heading: @Composable ()->Unit = {
             Row(Modifier.fillMaxWidth().heightIn(min=62.dp).testTag("animal_header"),verticalAlignment=Alignment.CenterVertically) {
                 AnimalNavigationButton(R.drawable.ic_arrow_left,stringResource(R.string.animal_back),!busy,back)
                 Column(Modifier.weight(1f),horizontalAlignment=if(centered) Alignment.CenterHorizontally else Alignment.Start) {
-                    Text(title,Modifier.fillMaxWidth().testTag("animal_header_title"),fontFamily=Poppins,fontSize=21.sp,lineHeight=26.25.sp,
+                    Text(title,Modifier.fillMaxWidth().testTag("animal_header_title"),fontFamily=Poppins,fontSize=titleSize.sp,lineHeight=(titleSize+5.25).sp,
                         fontWeight=FontWeight.Bold,color=PrimaryGreen,textAlign=if(centered) TextAlign.Center else TextAlign.Start)
                     subtitle?.let {Text(it,Modifier.fillMaxWidth(),fontFamily=Poppins,fontSize=12.sp,lineHeight=18.sp,
                         color=LivestockVisuals.Secondary,textAlign=if(centered) TextAlign.Center else TextAlign.Start)}
@@ -65,6 +65,9 @@ import pe.novatick.anitec.ui.theme.Poppins
     }
 }
 @Composable internal fun AnimalSelect(label: String,value: String,choices: List<Pair<String,String>>,enabled: Boolean,tag: String,onSelect: (String)->Unit) {
+    AnimalSelect(label,value,choices,enabled,tag,LivestockVisuals.Ink,onSelect)
+}
+@Composable internal fun AnimalSelect(label: String,value: String,choices: List<Pair<String,String>>,enabled: Boolean,tag: String,valueColor:Color,onSelect: (String)->Unit) {
     var expanded by remember {mutableStateOf(false)}
     Column(verticalArrangement=Arrangement.spacedBy(6.dp)) {
         LsText(label,size=12)
@@ -72,7 +75,7 @@ import pe.novatick.anitec.ui.theme.Poppins
             Surface(onClick={expanded=true},enabled=enabled,modifier=Modifier.fillMaxWidth().testTag(tag).semantics {contentDescription=label},shape=RoundedCornerShape(13.dp),
                 color=LivestockVisuals.Pale) {
                 Row(Modifier.heightIn(min=48.dp).padding(horizontal=13.dp,vertical=12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    LsText(value,Modifier.weight(1f),size=12)
+                    LsText(value,Modifier.weight(1f),size=12,color=valueColor)
                     Icon(painterResource(R.drawable.animal_dropdown_official),null,Modifier.size(10.dp,6.dp),tint=Color.Unspecified)
                 }
             }

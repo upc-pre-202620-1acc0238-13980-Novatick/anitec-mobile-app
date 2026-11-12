@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vis_agenda">Mi agenda</string>
+    <string name="vis_agenda_sub">Organiza tus visitas</string>
+    <string name="vis_detail">Detalle de visita</string>
+    <string name="vis_information">Información</string>
+    <string name="vis_farmer">Ganadero</string>
+    <string name="vis_animal">Animal</string>
+    <string name="vis_reason">Motivo de la visita</string>
+    <string name="vis_reason_hint">Ej. Control general</string>
+    <string name="vis_date">Fecha</string>
+    <string name="vis_time">Hora</string>
+    <string name="vis_hour">Hora (0–23)</string>
+    <string name="vis_minute">Minutos</string>
+    <string name="vis_date_hint">dd/mm/aaaa</string>
+    <string name="vis_select">Seleccionar</string>
+    <string name="vis_access_only">Solo ganaderos con acceso activo</string>
+    <string name="vis_private_agenda">La visita se guardará en tu agenda veterinaria.</string>
+    <string name="vis_save">Guardar visita</string>
+    <string name="vis_save_short">Guardar</string>
+    <string name="vis_saving">Guardando visita…</string>
+    <string name="vis_saved">Visita programada.</string>
+    <string name="vis_read_error">No se pudieron consultar las visitas. Reintenta cuando tengas conexión.</string>
+    <string name="vis_missing">La visita ya no está disponible en tu agenda autorizada.</string>
+    <string name="vis_invalid">Selecciona un ganadero y animal autorizados, escribe un motivo de 1 a 255 caracteres y elige una fecha y hora futuras válidas.</string>
+    <string name="vis_uncertain">No se pudo confirmar si la visita se guardó. Consulta la agenda antes de realizar otra operación. No se repetirá automáticamente.</string>
+    <string name="vis_check">Consultar la agenda del día</string>
+    <string name="vis_ack">Ya revisé la agenda; permitir otra operación</string>
+    <string name="vis_choose">Elegir</string>
+    <string name="vis_previous">Fechas anteriores</string>
+    <string name="vis_next">Fechas siguientes</string>
+</resources>

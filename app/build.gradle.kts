@@ -27,7 +27,7 @@ android {
         create("alpha") {
             initWith(getByName("debug"))
             applicationIdSuffix = ".alpha.linking"
-            versionNameSuffix = "-alpha-linking-f4"
+            versionNameSuffix = "-alpha-visits-f5"
             buildConfigField("String", "API_BASE_URL", "\"https://anitec-staging.onrender.com/api/v1/\"")
             buildConfigField("String", "API_ENVIRONMENT", "\"STAGING\"")
         }
