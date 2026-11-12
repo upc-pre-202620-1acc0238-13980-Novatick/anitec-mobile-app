@@ -53,6 +53,10 @@ import pe.novatick.anitec.ui.theme.*
    s.pending.error?.let {LinkError(it);LsAction(stringResource(R.string.lk_reload),vm::refresh)}
    LsText(stringResource(R.string.lk_shortcuts),bold=true)
    Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+    VeterinaryShortcut(stringResource(R.string.lk_schedule),R.drawable.link_schedule_official,Modifier.weight(1f).testTag("home_schedule_unavailable"),available=false)
+    VeterinaryShortcut(stringResource(R.string.lk_record_care),R.drawable.link_attention_official,Modifier.weight(1f).testTag("home_care_unavailable"),available=false)
+   }
+   Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
     VeterinaryShortcut(stringResource(R.string.lk_farmers),R.drawable.link_home_farmers_official,Modifier.weight(1f),onClick=farmers)
     VeterinaryShortcut(stringResource(R.string.lk_invitations),R.drawable.link_mail_official,Modifier.weight(1f),onClick=invitations)
    }
@@ -80,6 +84,7 @@ import pe.novatick.anitec.ui.theme.*
  val content:@Composable ()->Unit={Row(Modifier.heightIn(min=97.dp).padding(10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){
   Box(Modifier.size(40.dp).background(LivestockVisuals.Mint,RoundedCornerShape(8.dp)),contentAlignment=Alignment.Center){Icon(painterResource(icon),null,if(icon==R.drawable.link_visit_metric_official)Modifier.size(25.dp,26.dp) else Modifier.size(23.dp),tint=Color.Unspecified)}
   Column(Modifier.weight(1f)){LsText(count,Modifier.testTag(tag),size=24,bold=true);LsText(label,size=9,color=LivestockVisuals.Secondary)}
+  Icon(painterResource(R.drawable.link_home_chevron_official),null,Modifier.size(8.25.dp,14.5.dp),tint=Color.Unspecified)
  }}
  if(onClick==null)Surface(modifier,shape=RoundedCornerShape(18.dp),color=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border),shadowElevation=5.dp,content=content)
  else Surface(onClick=onClick,modifier=modifier,shape=RoundedCornerShape(18.dp),color=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border),shadowElevation=5.dp,content=content)
