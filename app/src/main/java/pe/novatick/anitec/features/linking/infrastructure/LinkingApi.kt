@@ -15,6 +15,7 @@ import retrofit2.http.*
 @Keep data class InviteRequest(val vetEmail: String)
 @Keep data class RespondRequest(val action: String)
 interface LinkingApi {
+ @POST("visits/schedule") suspend fun scheduleVisit(@Header("Authorization") jwt:String,@Body request:ScheduleVisitRequest):Response<Envelope<ScheduledVisitDto>>
  @GET("visits") suspend fun visits(@Header("Authorization") jwt: String,@Query("from") from: String,@Query("to") to: String): Response<Envelope<List<HomeVisitDto>>>
  @GET("vet-links") suspend fun links(@Header("Authorization") jwt: String): Response<Envelope<LinksDto>>
  @POST("invitations") suspend fun invite(@Header("Authorization") jwt: String,@Header("Accept-Language") language: String,@Body body: InviteRequest): Response<Envelope<InvitationDto>>
@@ -25,3 +26,5 @@ interface LinkingApi {
  @DELETE("vet-links/{id}") suspend fun revoke(@Header("Authorization") jwt: String,@Path("id") id: String): Response<Envelope<RevokeDto>>
 }
 @Keep data class HomeVisitDto(val id:String?,val animalId:String?,val animalName:String?,val farmerId:String?,val farmerName:String?,val type:String?,val scheduledAt:String?,val status:String?,val reason:String?)
+@Keep data class ScheduleVisitRequest(val animalId:String,val scheduledAt:String,val reason:String)
+@Keep data class ScheduledVisitDto(val id:String?,val animalId:String?,val farmerId:String?,val type:String?,val scheduledAt:String?,val status:String?,val reason:String?)

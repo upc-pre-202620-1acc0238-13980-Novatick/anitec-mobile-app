@@ -67,10 +67,21 @@ class LinkingRepositoryImpl(private val api: LinkingApi,private val requests: Au
    if(d.type !in listOf("VISITA","CONTROL") || d.status !in listOf("PROGRAMADA","COMPLETADA","CANCELADA"))invalid()
    val raw=date(d.scheduledAt).replace(Regex("\\.\\d+Z$"),"Z")
    val instant=SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'",Locale.US).apply {timeZone=java.util.TimeZone.getTimeZone("UTC")}.parse(raw)!!.time
-   HomeVisit(id(d.id),d.animalName,text(d.farmerName),instant,d.status!!,d.reason)
+   HomeVisit(id(d.id),d.animalName,text(d.farmerName),instant,d.status!!,d.reason,id(d.animalId),id(d.farmerId),d.type!!)
   }
   if(result.map {it.id}.distinct().size!=result.size)invalid()
   result.filter {day.contains(it.time)}.sortedBy {it.time}
+ }
+ override suspend fun scheduleVisit(farmerId:String,animalId:String,scheduledAt:String,reason:String)=mapped {
+  role(Role.VETERINARIO)
+  if(reason.isBlank() || reason.length>255)throw AuthFailure(AuthProblem.SERVER,400,"VALIDATION_ERROR")
+  val raw=date(scheduledAt)
+  val parser=SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'",Locale.US).apply{timeZone=java.util.TimeZone.getTimeZone("UTC")}
+  if(parser.parse(raw)!!.time<=System.currentTimeMillis())throw AuthFailure(AuthProblem.SERVER,400,"INVALID_DATE")
+  animal(farmerId,animalId) // Fresh linked-owner and animal authorization before the single POST.
+  val d=requests.execute{expected(api.scheduleVisit(it,ScheduleVisitRequest(id(animalId),scheduledAt,reason)),201)}
+  if(id(d.animalId)!=animalId || id(d.farmerId)!=farmerId || d.type!="VISITA" || d.status!="PROGRAMADA" || date(d.scheduledAt)!=scheduledAt || d.reason!=reason)invalid()
+  id(d.id)
  }
  override suspend fun observations(farmerId: String,animalId: String)=mapped {
   animal(farmerId,animalId) // Fresh link and selected-farmer animal scope before reading history.

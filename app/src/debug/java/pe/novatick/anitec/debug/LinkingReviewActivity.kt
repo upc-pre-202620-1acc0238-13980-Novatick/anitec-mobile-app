@@ -31,8 +31,16 @@ class LinkingReviewActivity: ComponentActivity(){
    val vm=remember {LinkingViewModel(DebugLinkingRepository(intent.getStringExtra("scenario") ?: "content"),role)}
    DisposableEffect(vm){vm.refresh();onDispose{vm.close()}}
    LaunchedEffect(vm){if(intent.getStringExtra("scenario")=="sent")vm.invite("qa.vet@example.invalid",language)}
-   Scaffold(bottomBar={if(role==Role.GANADERO) RancherBottomBar(if(screen=="accountFarmer")RancherTab.PROFILE else RancherTab.VETS,mapOf(RancherTab.HOME to stringResource(R.string.lk_home),RancherTab.CATTLE to stringResource(R.string.ls_tab_cattle),RancherTab.VETS to stringResource(R.string.lk_vets),RancherTab.PROFILE to stringResource(R.string.lk_profile))){} else VeterinarianBottomBar(when(screen){"home"->VeterinarianTab.HOME;"account"->VeterinarianTab.PROFILE;else->VeterinarianTab.RANCHERS},{},mapOf(VeterinarianTab.HOME to stringResource(R.string.lk_home),VeterinarianTab.AGENDA to stringResource(R.string.lk_agenda),VeterinarianTab.RANCHERS to stringResource(R.string.lk_farmers),VeterinarianTab.PROFILE to stringResource(R.string.lk_profile)))}){padding->Box(Modifier.padding(padding).consumeWindowInsets(padding)){
+   if(screen=="visits") {VeterinaryLinkingShell(DebugLinkingRepository("visits"),pe.novatick.anitec.features.auth.domain.Profile(DebugLinkingRepository.VET,"qa@example.invalid","María","López",Role.VETERINARIO)){};return@AniTecTheme}
+   val visitVm=remember{VisitsViewModel(DebugLinkingRepository("visits"),Role.VETERINARIO)}
+   DisposableEffect(visitVm){onDispose{visitVm.close()}}
+   LaunchedEffect(screen){if(screen=="visitForm")visitVm.begin();if(screen=="visitModal")visitVm.begin(DebugLinkingRepository.FARMER,"60000000-0000-4000-8000-000000000001")}
+   Scaffold(bottomBar={if(role==Role.GANADERO) RancherBottomBar(if(screen=="accountFarmer")RancherTab.PROFILE else RancherTab.VETS,mapOf(RancherTab.HOME to stringResource(R.string.lk_home),RancherTab.CATTLE to stringResource(R.string.ls_tab_cattle),RancherTab.VETS to stringResource(R.string.lk_vets),RancherTab.PROFILE to stringResource(R.string.lk_profile))){} else VeterinarianBottomBar(when(screen){"home"->VeterinarianTab.HOME;"account"->VeterinarianTab.PROFILE;"visitForm","visitAgenda","visitDetail"->VeterinarianTab.AGENDA;else->VeterinarianTab.RANCHERS},{},mapOf(VeterinarianTab.HOME to stringResource(R.string.lk_home),VeterinarianTab.AGENDA to stringResource(R.string.lk_agenda),VeterinarianTab.RANCHERS to stringResource(R.string.lk_farmers),VeterinarianTab.PROFILE to stringResource(R.string.lk_profile)))}){padding->Box(Modifier.padding(padding).consumeWindowInsets(padding)){
    when(screen){"invite"->InviteVetScreen(vm){};"invitations"->VeterinarianInvitationsScreen(vm){};"farmers"->VeterinarianFarmersScreen(vm,{},{})
+    "visitForm"->VisitScheduleScreen(visitVm,{},{})
+    "visitAgenda"->VisitsAgendaScreen(visitVm,{},{})
+    "visitDetail"->VisitDetailScreen(visitVm,"90000000-0000-4000-8000-000000000001",pe.novatick.anitec.features.linking.domain.VisitDay.current().start,"María López"){}
+    "visitModal"->{LinkedAnimalDetailScreen(vm,DebugLinkingRepository.FARMER,"60000000-0000-4000-8000-000000000001",{});VisitScheduleModal(visitVm,{},{})}
     "animals"->LinkedAnimalsScreen(vm,DebugLinkingRepository.FARMER,{},{})
     "animal"->LinkedAnimalDetailScreen(vm,DebugLinkingRepository.FARMER,"60000000-0000-4000-8000-000000000001",{})
     "observations"->LinkedObservationsScreen(vm,DebugLinkingRepository.FARMER,"60000000-0000-4000-8000-000000000001"){}

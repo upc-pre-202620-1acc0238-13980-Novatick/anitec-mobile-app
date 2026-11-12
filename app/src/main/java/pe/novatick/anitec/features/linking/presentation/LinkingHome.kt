@@ -20,9 +20,9 @@ import pe.novatick.anitec.ui.components.RancherHeaderShape
 import pe.novatick.anitec.ui.theme.*
 
 /** Figma 104:3913; today's visits are read-only, full agenda and clinical actions remain unavailable. */
-@Composable fun VeterinaryHome(vm: LinkingViewModel,profile: Profile,farmers: ()->Unit,invitations: ()->Unit,account: ()->Unit) {
+@Composable fun VeterinaryHome(vm: LinkingViewModel,profile: Profile,farmers: ()->Unit,invitations: ()->Unit,account: ()->Unit,onSchedule:(()->Unit)?=null,onAgenda:(()->Unit)?=null,onVisit:((pe.novatick.anitec.features.linking.domain.HomeVisit)->Unit)?=null,revision:Long=0) {
  val s by vm.state.collectAsState()
- LaunchedEffect(vm){while(true){vm.readToday();val now=System.currentTimeMillis();delay((VisitDay.current(now).end-now).coerceAtLeast(1000))}}
+ LaunchedEffect(vm,revision){while(true){vm.readToday();val now=System.currentTimeMillis();delay((VisitDay.current(now).end-now).coerceAtLeast(1000))}}
  Column(Modifier.fillMaxSize().background(Color.White).verticalScroll(rememberScrollState())) {
   Column(Modifier.fillMaxWidth().clip(RancherHeaderShape).background(PrimaryGreenAccent).padding(horizontal=28.dp,vertical=30.dp)) {
    Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -38,7 +38,7 @@ import pe.novatick.anitec.ui.theme.*
   }
   Column(Modifier.padding(horizontal=28.dp,vertical=16.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
    Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-    HomeMetric(stringResource(R.string.lk_visits_today),s.today.value?.size?.toString() ?: "—",R.drawable.link_visit_metric_official,"home_visit_count",Modifier.weight(1f))
+    HomeMetric(stringResource(R.string.lk_visits_today),s.today.value?.size?.toString() ?: "—",R.drawable.link_visit_metric_official,"home_visit_count",Modifier.weight(1f),onAgenda)
     HomeMetric(stringResource(R.string.lk_linked_farmers),s.farmers.value?.size?.toString() ?: "—",R.drawable.link_home_farmers_official,"home_link_count",Modifier.weight(1f),farmers)
    }
    s.farmers.error?.let {LinkError(it);LsAction(stringResource(R.string.lk_reload),vm::refresh)}
@@ -53,13 +53,13 @@ import pe.novatick.anitec.ui.theme.*
    s.pending.error?.let {LinkError(it);LsAction(stringResource(R.string.lk_reload),vm::refresh)}
    LsText(stringResource(R.string.lk_shortcuts),bold=true)
    Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-    VeterinaryShortcut(stringResource(R.string.lk_schedule),R.drawable.link_schedule_official,Modifier.weight(1f).testTag("home_schedule_unavailable"),available=false)
+    VeterinaryShortcut(stringResource(R.string.lk_schedule),R.drawable.link_schedule_official,Modifier.weight(1f).testTag("home_schedule_unavailable"),available=onSchedule!=null,onClick={onSchedule?.invoke()})
     VeterinaryShortcut(stringResource(R.string.lk_record_care),R.drawable.link_attention_official,Modifier.weight(1f).testTag("home_care_unavailable"),available=false)
    }
-   Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){LsText(stringResource(R.string.lk_agenda_today),Modifier.weight(1f),bold=true);TextButton({},enabled=false){LsText(stringResource(R.string.lk_view_agenda),size=10,color=NeutralSlate)}}
+   Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){LsText(stringResource(R.string.lk_agenda_today),Modifier.weight(1f),bold=true);TextButton({onAgenda?.invoke()},enabled=onAgenda!=null){LsText(stringResource(R.string.lk_view_agenda),size=10,color=if(onAgenda==null)NeutralSlate else PrimaryGreen)}}
    if(s.today.loading)LsLoading(stringResource(R.string.lk_loading))
    s.today.error?.let {LinkError(it);LsAction(stringResource(R.string.lk_reload),{vm.readToday()})}
-   s.today.value?.let {items->if(items.isEmpty())VeterinaryAgendaPlaceholder(today=true) else Surface(shape=RoundedCornerShape(16.dp),color=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border)){
+   s.today.value?.let {items->if(items.isEmpty())VeterinaryAgendaPlaceholder(today=true,available=onAgenda!=null) else if(onVisit!=null)VisitRows(items,onVisit) else Surface(shape=RoundedCornerShape(16.dp),color=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border)){
     Column {items.forEachIndexed {index,item->
      if(index>0)HorizontalDivider(color=LivestockVisuals.Border)
      Row(Modifier.fillMaxWidth().padding(12.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)){
@@ -93,12 +93,12 @@ import pe.novatick.anitec.ui.theme.*
   }
  }
 }
-@Composable internal fun VeterinaryAgendaPlaceholder(today:Boolean=false) {
+@Composable internal fun VeterinaryAgendaPlaceholder(today:Boolean=false,available:Boolean=false) {
  Surface(shape=RoundedCornerShape(16.dp),color=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border),modifier=Modifier.fillMaxWidth()) {
   Column(Modifier.padding(22.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(10.dp)) {
    Icon(painterResource(R.drawable.link_calendar_official),null,Modifier.size(20.dp),tint=NeutralSlate)
    LsText(stringResource(if(today)R.string.lk_today_empty else R.string.lk_upcoming_empty),size=12,color=LivestockVisuals.Secondary)
-   LsText(stringResource(R.string.lk_agenda_soon),size=10,color=NeutralSlate)
+   if(!available)LsText(stringResource(R.string.lk_agenda_soon),size=10,color=NeutralSlate)
   }
  }
 }
