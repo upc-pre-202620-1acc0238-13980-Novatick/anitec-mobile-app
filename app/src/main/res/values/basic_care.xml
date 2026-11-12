@@ -1,0 +1,16 @@
+<resources>
+ <string name="care_latest">Última atención</string>
+ <string name="care_unavailable">No se pudo consultar la última atención.</string>
+ <string name="care_empty">No hay atenciones registradas.</string>
+ <string name="care_date">Fecha *</string>
+ <string name="care_reason">Motivo *</string>
+ <string name="care_description">Descripción *</string>
+ <string name="care_form_sub">Registra la atención realizada al animal</string>
+ <string name="care_save">Guardar atención</string>
+ <string name="care_invalid">Revisa este campo. El motivo admite hasta 150 caracteres y la fecha no puede ser futura.</string>
+ <string name="care_uncertain">No se confirmó el resultado. No repitas el registro: vuelve a la ficha y consulta al responsable antes de un nuevo intento.</string>
+ <string name="care_detail">Detalle de atención</string>
+ <string name="care_summary">Resumen de la atención</string>
+ <string name="care_related">Atención relacionada</string>
+ <string name="care_date_read">Fecha</string>
+</resources>

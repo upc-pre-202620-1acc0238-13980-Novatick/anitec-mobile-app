@@ -60,7 +60,7 @@ class VisitsUiTest {
   compose.onNodeWithTag("vis_cancel").performClick();assertEquals(0,repo.schedules)
   compose.onNodeWithTag("vet_schedule_unavailable").performScrollTo().performClick();compose.onNodeWithTag("vis_reason").performTextInput("Contextual QA")
   dateAndTime();compose.onNodeWithTag("vis_save").performClick();compose.onNodeWithTag("visit_modal").assertDoesNotExist();assertEquals(1,repo.schedules)
-  compose.onNodeWithTag("vet_care_unavailable").assertIsNotEnabled()
+  compose.onNodeWithTag("vet_care_unavailable").assertIsEnabled()
  }
  @Test fun agendaNavigatesBeyondExampleDatesAndFailedReadIsNotEmpty(){
   open(scenario="visits");compose.onNodeWithText("Ver agenda").performScrollTo().performClick()

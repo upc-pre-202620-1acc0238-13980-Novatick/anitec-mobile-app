@@ -75,7 +75,7 @@ class LivestockRepositoryImpl(private val api: LivestockApi,private val requests
         AnimalDetail(id,text(d.code),d.name,text(d.species),this.id(d.speciesId),
             AnimalSex.entries.firstOrNull {it.name==d.sex} ?: invalid(),d.breed,d.birthDate?.also {
                 if("birthDate" in animalInputErrors(NewAnimal(farmId,this.id(d.speciesId),AnimalSex.DESCONOCIDO,birthDate=it))) invalid()
-            },AnimalStatus.entries.firstOrNull {it.name==d.status} ?: invalid(),farmId,text(d.farmName),count(d.version),d.photoUrl)
+            },AnimalStatus.entries.firstOrNull {it.name==d.status} ?: invalid(),farmId,text(d.farmName),count(d.version),d.photoUrl,recentCare(d.recentAttentions))
     }
     private fun observation(d: ObservationDto): AnimalObservation {
         val date=d.date?.also {

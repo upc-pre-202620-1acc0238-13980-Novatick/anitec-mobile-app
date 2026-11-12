@@ -236,18 +236,17 @@ import pe.novatick.anitec.ui.theme.*
  val read=if(s.farmerContext==farmer && s.observationAnimalId==id)s.observations else LinkRead(loading=true)
  return ReadState(read.value,read.loading,read.error!=null)
 }
-@Composable fun LinkedAnimalDetailScreen(vm: LinkingViewModel,farmer: String,id: String,back: ()->Unit,allObservations: ()->Unit={},visitVm:VisitsViewModel?=null){
+@Composable fun LinkedAnimalDetailScreen(vm: LinkingViewModel,farmer: String,id: String,back: ()->Unit,allObservations: ()->Unit={},visitVm:VisitsViewModel?=null,registerCare:(()->Unit)?=null,openCare:(String)->Unit={}){
  var scheduleOpen by remember(farmer,id){mutableStateOf(false)}
  if(scheduleOpen && visitVm!=null)VisitScheduleModal(visitVm,{scheduleOpen=false},{scheduleOpen=false;vm.readToday()})
  val s by vm.state.collectAsState();LaunchedEffect(farmer,id){vm.readAnimal(farmer,id);vm.readObservations(farmer,id)}
  val read=if(s.farmerContext==farmer && s.animalId==id)s.animal else LinkRead(loading=true)
  AnimalDetailScreen(LivestockState(animalDetailId=id,animalDetail=ReadState(read.value,read.loading,read.error!=null),animalDetailError=read.error),back,{vm.readAnimal(farmer,id);vm.readObservations(farmer,id)},readOnly=true,observations={
   ReadOnlyObservationSection(observationRead(s,farmer,id),{vm.readObservations(farmer,id)},allObservations)
-  Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){LsText(stringResource(R.string.lk_care_history),Modifier.weight(1f),bold=true);TextButton({},enabled=false){LsText(stringResource(R.string.lk_all),size=10,color=NeutralSlate)}}
-  LsNotice(stringResource(R.string.lk_care_unavailable))
+  read.value?.let{LatestCareSection(it,openCare)}
   Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){
    VeterinaryShortcut(stringResource(R.string.lk_schedule),R.drawable.link_schedule_official,Modifier.weight(1f).testTag("vet_schedule_unavailable"),available=visitVm!=null,onClick={visitVm?.begin(farmer,id);scheduleOpen=true})
-   VeterinaryShortcut(stringResource(R.string.lk_record_care),R.drawable.link_attention_official,Modifier.weight(1f).testTag("vet_care_unavailable"),available=false)
+   VeterinaryShortcut(stringResource(R.string.lk_record_care),R.drawable.link_attention_official,Modifier.weight(1f).testTag("vet_care_unavailable"),available=registerCare!=null,onClick={registerCare?.invoke()})
   }
  })
 }
@@ -258,6 +257,9 @@ import pe.novatick.anitec.ui.theme.*
 @Composable fun VeterinaryLinkingShell(repo: LinkingRepository,profile: Profile,logout: ()->Unit){
  val vm=remember(repo,profile.id){LinkingViewModel(repo,profile.role)}
  val visits=remember(repo,profile.id){VisitsViewModel(repo,profile.role)}
+ val care=remember(repo,profile.id){BasicCareViewModel(repo,profile.role)}
+ DisposableEffect(care){onDispose{care.close()}}
+ val cs by care.state.collectAsState()
  DisposableEffect(visits){onDispose{visits.close()}}
  val vs by visits.state.collectAsState()
  DisposableEffect(vm){vm.refresh();onDispose{vm.close()}}
@@ -265,7 +267,7 @@ import pe.novatick.anitec.ui.theme.*
  val tab=when{route=="home"->VeterinarianTab.HOME;route=="profile"->VeterinarianTab.PROFILE;route=="agenda" || route=="schedule" || route?.startsWith("visit/")==true->VeterinarianTab.AGENDA;else->VeterinarianTab.RANCHERS}
  val s by vm.state.collectAsState()
  val labels=mapOf(VeterinarianTab.HOME to stringResource(R.string.lk_home),VeterinarianTab.AGENDA to stringResource(R.string.lk_agenda),VeterinarianTab.RANCHERS to stringResource(R.string.lk_farmers),VeterinarianTab.PROFILE to stringResource(R.string.lk_profile))
- val blocked=s.busy || vs.form.busy || vs.form.uncertain
+ val blocked=s.busy || vs.form.busy || vs.form.uncertain || cs.busy
  val schedule:()->Unit={visits.begin();nav.navigate("schedule"){launchSingleTop=true}}
  val select:(HomeVisit)->Unit={visits.select(it);nav.navigate("visit/${it.id}/${it.time}")}
  Scaffold(containerColor=Color.White,bottomBar={VeterinarianBottomBar(tab,{selected->if(!blocked)nav.navigate(when(selected){VeterinarianTab.HOME->"home";VeterinarianTab.PROFILE->"profile";VeterinarianTab.AGENDA->"agenda";else->"farmers"}){launchSingleTop=true;popUpTo("home")}},labels)}){padding->Box(Modifier.padding(padding).consumeWindowInsets(padding)){
@@ -275,7 +277,9 @@ import pe.novatick.anitec.ui.theme.*
    composable("invitations"){VeterinarianInvitationsScreen(vm){nav.popBackStack()}}
    composable("farmer/{id}"){LinkedFarmerDetailScreen(vm,it.arguments?.getString("id").orEmpty(),{nav.popBackStack()},{nav.navigate("farmer/${it.arguments?.getString("id")}/animals")})}
    composable("farmer/{id}/animals"){entry->val owner=entry.arguments?.getString("id").orEmpty();LinkedAnimalsScreen(vm,owner,{nav.popBackStack()}){nav.navigate("farmer/$owner/animal/$it")}}
-   composable("farmer/{id}/animal/{animalId}"){entry->val owner=entry.arguments?.getString("id").orEmpty();val animal=entry.arguments?.getString("animalId").orEmpty();LinkedAnimalDetailScreen(vm,owner,animal,{nav.popBackStack()},{nav.navigate("farmer/$owner/animal/$animal/observations")},visits)}
+   composable("farmer/{id}/animal/{animalId}"){entry->val owner=entry.arguments?.getString("id").orEmpty();val animal=entry.arguments?.getString("animalId").orEmpty();LinkedAnimalDetailScreen(vm,owner,animal,{nav.popBackStack()},{nav.navigate("farmer/$owner/animal/$animal/observations")},visits,{nav.navigate("care_new/$owner/$animal")},{nav.navigate("care/$animal/$it")})}
+   composable("care_new/{owner}/{animal}"){entry->val owner=entry.arguments?.getString("owner").orEmpty();val animal=entry.arguments?.getString("animal").orEmpty();BasicCareForm(care,owner,animal,{nav.popBackStack()}){vm.readAnimal(owner,animal);nav.popBackStack()}}
+   composable("care/{animal}/{id}"){entry->BasicCareDetail(care,entry.arguments?.getString("animal").orEmpty(),entry.arguments?.getString("id").orEmpty(),s.animal.value){nav.popBackStack()}}
    composable("farmer/{id}/animal/{animalId}/observations"){entry->LinkedObservationsScreen(vm,entry.arguments?.getString("id").orEmpty(),entry.arguments?.getString("animalId").orEmpty()){nav.popBackStack()}}
    composable("profile"){pe.novatick.anitec.ui.screens.home.RancherProfileScreen(userName=profile.name+" "+profile.lastName,userEmail=profile.email,userRole=stringResource(R.string.lk_veterinarian_role),onLogoutClick=logout)}
    composable("agenda"){VisitsAgendaScreen(visits,schedule,select)}

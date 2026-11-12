@@ -59,7 +59,7 @@ class LinkingUiTest {
   compose.onNodeWithText("Luna").performScrollTo().performClick()
   compose.onNodeWithTag("animal_header_title").assertTextContains("Luna")
   compose.onNodeWithTag("vet_schedule_unavailable").performScrollTo().assertIsEnabled()
-  compose.onNodeWithTag("vet_care_unavailable").performScrollTo().assertIsNotEnabled()
+  compose.onNodeWithTag("vet_care_unavailable").performScrollTo().assertIsEnabled()
   compose.onNodeWithTag("vet_observations_all").performScrollTo().performClick()
   compose.onNodeWithText("Se adapta bien al lote y mantiene buen apetito.").assertExists()
   compose.onNodeWithText("Desde ayer come un poco menos, pero sin otros síntomas visibles.").assertExists()
