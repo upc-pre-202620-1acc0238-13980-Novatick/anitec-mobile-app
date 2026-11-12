@@ -72,6 +72,21 @@ class LinkingRepositoryImpl(private val api: LinkingApi,private val requests: Au
   if(result.map {it.id}.distinct().size!=result.size)invalid()
   result.filter {day.contains(it.time)}.sortedBy {it.time}
  }
+ override suspend fun upcomingVisits()=mapped {
+  val me=role(Role.GANADERO)
+  val result=requests.execute{expected(api.upcomingVisits(it))}.map{d->
+   val stamp=text(d.scheduledAt)
+   if(!stamp.matches(Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z")))invalid()
+   val base=stamp.replace(Regex("\\.\\d+Z$"),"Z")
+   val time=SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'",Locale.US).apply{timeZone=java.util.TimeZone.getTimeZone("UTC");isLenient=false}.parse(base)!!.time+
+    (Regex("\\.(\\d+)Z$").find(stamp)?.groupValues?.get(1)?.take(3)?.padEnd(3,'0')?.toLong() ?: 0L)
+   if(d.status!="PROGRAMADA" || d.type !in listOf("VISITA","CONTROL"))invalid()
+   FarmerVisit(HomeVisit(id(d.id),text(d.animalName),text(d.farmerName),time,d.status!!,d.reason,id(d.animalId),me.id,d.type!!),text(d.animalCode),text(d.vetName))
+  }
+  if(profile()?.id!=me.id || profile()?.role!=Role.GANADERO)throw AuthFailure(AuthProblem.RELOGIN)
+  if(result.map{it.visit.id}.distinct().size!=result.size)invalid()
+  result.sortedWith(compareBy<FarmerVisit>{it.visit.time}.thenBy{it.visit.id})
+ }
  override suspend fun scheduleVisit(farmerId:String,animalId:String,scheduledAt:String,reason:String)=mapped {
   role(Role.VETERINARIO)
   if(reason.isBlank() || reason.length>255)throw AuthFailure(AuthProblem.SERVER,400,"VALIDATION_ERROR")

@@ -60,7 +60,7 @@ El modo local requiere el backend aislado previamente preparado y su PostgreSQL;
 
 La agenda convierte fecha/hora local a UTC y muestra únicamente datos reales autorizados. Después de un envío incierto se debe consultar antes de intentar otra creación; no repetir Guardar suponiendo que un timeout significa que no se guardó.
 
-**Pendiente para TF:** registrar atenciones, tratamientos, vacunas, historial clínico completo y suscripciones. Los accesos señalados Próximamente no ejecutan operaciones simuladas. No existe edición PUT/PATCH de observaciones ni agenda GANADERO respaldada por el contrato actual. Fotografías: URL existente o placeholder, sin subida de archivos. Recuperación de contraseña y opciones de perfil sin contrato operativo no deben considerarse flujos terminados.
+**Pendiente para TF:** registrar atenciones, tratamientos, vacunas, historial clínico completo y suscripciones. Los accesos señalados Próximamente no ejecutan operaciones simuladas. El GANADERO puede consultar sus próximas visitas programadas: hasta tres en Inicio, listado completo y detalle de solo lectura. No existe edición PUT/PATCH de observaciones. Fotografías: URL existente o placeholder, sin subida de archivos. Recuperación de contraseña y opciones de perfil sin contrato operativo no deben considerarse flujos terminados.
 
 ## Tecnologías y versiones del repositorio
 

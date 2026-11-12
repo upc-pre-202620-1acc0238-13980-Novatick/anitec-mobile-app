@@ -98,6 +98,15 @@ private fun shiftDay(day:VisitDay,amount:Int):VisitDay=Calendar.getInstance().ap
   if(s.detailLoading)LsLoading(stringResource(R.string.lk_loading))
   s.detailError?.let{VisitReadError(it);LsAction(stringResource(R.string.lk_reload),{vm.loadDetail(id,VisitDay.current(at))})}
   s.detail?.let{item->
+   VisitDetailInformation(item,vetName)
+   Button({},Modifier.fillMaxWidth().heightIn(min=48.dp),enabled=false,shape=RoundedCornerShape(14.dp),colors=ButtonDefaults.buttonColors(disabledContainerColor=PrimaryGreenAccent,disabledContentColor=Color.White)){
+    Icon(painterResource(R.drawable.link_attention_official),null,Modifier.size(20.dp),tint=Color.White);Spacer(Modifier.width(8.dp));LsText(stringResource(R.string.lk_record_care),size=12,bold=true,color=Color.White)
+   }
+   LsText(stringResource(R.string.lk_action_soon),size=10,color=NeutralSlate)
+  }
+ }
+}
+@Composable internal fun VisitDetailInformation(item:HomeVisit,vetName:String,animalLabel:String=item.animal ?: item.animalId.orEmpty(),activityType:String?=null){
    Surface(Modifier.fillMaxWidth(),shape=RoundedCornerShape(18.dp),color=PrimaryGreenAccent){
     Row(Modifier.padding(18.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)){
      Box(Modifier.size(53.dp).background(Color.White.copy(alpha=.16f),RoundedCornerShape(15.dp)),contentAlignment=Alignment.Center){Icon(painterResource(R.drawable.visit_banner_calendar_official),null,Modifier.size(32.dp),tint=Color.Unspecified)}
@@ -106,17 +115,12 @@ private fun shiftDay(day:VisitDay,amount:Int):VisitDay=Calendar.getInstance().ap
    }
    LsText(stringResource(R.string.vis_information),Modifier.padding(top=8.dp),bold=true)
    Surface(Modifier.fillMaxWidth(),shape=RoundedCornerShape(16.dp),border=BorderStroke(1.dp,LivestockVisuals.Border),color=Color.White){Column{
-    VisitInfo(R.drawable.visit_animal_official,22,16,stringResource(R.string.vis_animal),item.animal ?: item.animalId.orEmpty())
+    VisitInfo(R.drawable.visit_animal_official,22,16,stringResource(R.string.vis_animal),animalLabel)
     VisitInfo(R.drawable.visit_person_official,25,25,stringResource(R.string.vis_farmer),item.farmer)
     VisitInfo(R.drawable.visit_vet_official,20,20,stringResource(R.string.lk_veterinarian_role),vetName)
-    VisitInfo(R.drawable.visit_reason_official,20,20,stringResource(R.string.vis_reason),item.reason?.takeIf(String::isNotBlank) ?: stringResource(R.string.lk_visit),last=true)
+    VisitInfo(R.drawable.visit_reason_official,20,20,stringResource(R.string.vis_reason),item.reason?.takeIf(String::isNotBlank) ?: stringResource(R.string.lk_visit),last=activityType==null)
+    if(activityType!=null)VisitInfo(R.drawable.visit_reason_official,20,20,stringResource(R.string.fv_type),activityType,last=true)
    }}
-   Button({},Modifier.fillMaxWidth().heightIn(min=48.dp),enabled=false,shape=RoundedCornerShape(14.dp),colors=ButtonDefaults.buttonColors(disabledContainerColor=PrimaryGreenAccent,disabledContentColor=Color.White)){
-    Icon(painterResource(R.drawable.link_attention_official),null,Modifier.size(20.dp),tint=Color.White);Spacer(Modifier.width(8.dp));LsText(stringResource(R.string.lk_record_care),size=12,bold=true,color=Color.White)
-   }
-   LsText(stringResource(R.string.lk_action_soon),size=10,color=NeutralSlate)
-  }
- }
 }
 @Composable private fun VisitInfo(icon:Int,width:Int,height:Int,label:String,value:String,last:Boolean=false){
  Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(11.dp)){
