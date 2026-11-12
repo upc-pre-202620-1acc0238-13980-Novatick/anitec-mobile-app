@@ -13,13 +13,20 @@ data class LinkingState(
  val farms: LinkRead<List<pe.novatick.anitec.features.livestock.domain.Farm>> = LinkRead(),
  val animals: LinkRead<pe.novatick.anitec.features.livestock.domain.Inventory> = LinkRead(),
  val animal: LinkRead<pe.novatick.anitec.features.livestock.domain.AnimalDetail> = LinkRead(),val animalId: String?=null,
- val observations: LinkRead<List<pe.novatick.anitec.features.livestock.domain.AnimalObservation>> = LinkRead(),val observationAnimalId: String?=null)
+ val observations: LinkRead<List<pe.novatick.anitec.features.livestock.domain.AnimalObservation>> = LinkRead(),val observationAnimalId: String?=null,
+ val today: LinkRead<List<HomeVisit>> = LinkRead(),val visitDay: VisitDay?=null)
 /** Owned by the authenticated composition; disposal cancels work and removes all account data. */
 class LinkingViewModel(private val repo: LinkingRepository,val role: Role,dispatcher: CoroutineDispatcher=Dispatchers.Main.immediate) {
  private val job=SupervisorJob();private val scope=CoroutineScope(job+dispatcher)
  private val mutable=MutableStateFlow(LinkingState());val state=mutable.asStateFlow()
  private var generation=0L
  fun close(){generation++;job.cancel();mutable.value=LinkingState()}
+ private var todayTicket=0L
+ fun readToday(day: VisitDay=VisitDay.current()){
+  if(role!=Role.VETERINARIO || !job.isActive)return
+  val ticket=++todayTicket;mutable.update {it.copy(today=LinkRead(loading=true),visitDay=day)}
+  browse({repo.todayVisits(day)}){value->if(ticket==todayTicket)mutable.update {it.copy(today=value)}}
+ }
  fun refresh(){
   if(!job.isActive)return
   val g=++generation

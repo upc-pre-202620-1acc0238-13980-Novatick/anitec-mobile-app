@@ -241,6 +241,12 @@ import pe.novatick.anitec.ui.theme.*
  val read=if(s.farmerContext==farmer && s.animalId==id)s.animal else LinkRead(loading=true)
  AnimalDetailScreen(LivestockState(animalDetailId=id,animalDetail=ReadState(read.value,read.loading,read.error!=null),animalDetailError=read.error),back,{vm.readAnimal(farmer,id);vm.readObservations(farmer,id)},readOnly=true,observations={
   ReadOnlyObservationSection(observationRead(s,farmer,id),{vm.readObservations(farmer,id)},allObservations)
+  Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){LsText(stringResource(R.string.lk_care_history),Modifier.weight(1f),bold=true);TextButton({},enabled=false){LsText(stringResource(R.string.lk_all),size=10,color=NeutralSlate)}}
+  LsNotice(stringResource(R.string.lk_care_unavailable))
+  Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){
+   VeterinaryShortcut(stringResource(R.string.lk_schedule),R.drawable.link_schedule_official,Modifier.weight(1f).testTag("vet_schedule_unavailable"),available=false)
+   VeterinaryShortcut(stringResource(R.string.lk_record_care),R.drawable.link_attention_official,Modifier.weight(1f).testTag("vet_care_unavailable"),available=false)
+  }
  })
 }
 @Composable fun LinkedObservationsScreen(vm: LinkingViewModel,farmer: String,id: String,back: ()->Unit){

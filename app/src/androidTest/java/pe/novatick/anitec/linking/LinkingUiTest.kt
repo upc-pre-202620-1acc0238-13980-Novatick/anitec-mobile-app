@@ -57,6 +57,8 @@ class LinkingUiTest {
   compose.onNodeWithTag("linked_view_animals").performScrollTo().performClick()
   compose.onNodeWithText("Luna").performScrollTo().performClick()
   compose.onNodeWithTag("animal_header_title").assertTextContains("Luna")
+  compose.onNodeWithTag("vet_schedule_unavailable").performScrollTo().assertIsNotEnabled()
+  compose.onNodeWithTag("vet_care_unavailable").performScrollTo().assertIsNotEnabled()
   compose.onNodeWithTag("vet_observations_all").performScrollTo().performClick()
   compose.onNodeWithText("Se adapta bien al lote y mantiene buen apetito.").assertExists()
   compose.onNodeWithText("Desde ayer come un poco menos, pero sin otros síntomas visibles.").assertExists()
@@ -76,8 +78,10 @@ class LinkingUiTest {
   compose.onNodeWithContentDescription(context.getString(pe.novatick.anitec.R.string.animal_more)).performClick()
   compose.onNodeWithTag("animal_edit").assertIsEnabled();compose.onNodeWithTag("animal_deactivate").assertIsEnabled()
  }
- @Test fun veterinaryHomeUsesRealCountAndNoVisitStatistics(){open(screen="home");compose.onNodeWithTag("home_link_count",useUnmergedTree=true).assertTextContains("1");compose.onNodeWithTag("home_pending").assertExists();compose.onNodeWithText("Aquí aparecerán tus próximas visitas").assertExists();compose.onNodeWithText("4 visitas hoy").assertDoesNotExist()}
- @Test fun emptyEnglishHomeDoesNotInventPendingInvitations(){open("en","empty","home");compose.onNodeWithTag("home_link_count",useUnmergedTree=true).assertTextContains("0");compose.onNodeWithTag("home_pending").assertDoesNotExist();compose.onNodeWithText("Your upcoming visits will appear here").assertExists()}
+ @Test fun veterinaryHomeUsesRealCountAndNoVisitStatistics(){open(screen="home");compose.onNodeWithTag("home_link_count",useUnmergedTree=true).assertTextContains("1");compose.onNodeWithTag("home_visit_count",useUnmergedTree=true).assertTextContains("0");compose.onNodeWithTag("home_pending").assertExists();compose.onNodeWithText("Tus visitas de hoy aparecerán aquí").assertExists()}
+ @Test fun emptyEnglishHomeDoesNotInventPendingInvitations(){open("en","empty","home");compose.onNodeWithTag("home_link_count",useUnmergedTree=true).assertTextContains("0");compose.onNodeWithTag("home_pending").assertDoesNotExist();compose.onNodeWithText("Today’s visits will appear here").assertExists();compose.onNodeWithText("View agenda").assertIsNotEnabled()}
+ @Test fun homeShowsOnlyReturnedVisitsWithoutEnablingFullAgenda(){open(scenario="visits",screen="home");compose.onNodeWithTag("home_visit_count",useUnmergedTree=true).assertTextContains("1");compose.onNodeWithText("Control general").assertExists();compose.onNodeWithText("Ver agenda").assertIsNotEnabled()}
+ @Test fun failedVisitReadDoesNotInventZero(){open(scenario="error",screen="home");compose.onNodeWithTag("home_visit_count",useUnmergedTree=true).assertTextContains("—");compose.onNodeWithText("Tus visitas de hoy aparecerán aquí").assertDoesNotExist()}
  @Test fun veterinaryObservationsShowServerMetadataWithoutMutationControls(){open(screen="observations");compose.onNodeWithText("Luis Martínez · 10 nov 2026").assertExists();compose.onNodeWithText("Agregar observación").assertDoesNotExist();compose.onNodeWithTag("observation_save").assertDoesNotExist()}
  @Test fun deniedObservationsAreNotPresentedAsEmpty(){open(scenario="observationError",screen="observations");compose.onNodeWithText("Todavía no hay observaciones.").assertDoesNotExist();compose.onNodeWithText("No se pudieron cargar las observaciones.").assertExists();compose.onNodeWithText("Reintentar").assertExists()}
  @Test fun englishAccountLocalizesRoleAndScrollsWithLongName(){open("en",screen="account");compose.onNodeWithText("María Alejandra López de la Cruz y Fernández").assertIsDisplayed();compose.onNodeWithText("Veterinarian").assertExists();compose.onNodeWithText("Help and legal").performScrollTo().assertIsDisplayed();compose.onNodeWithText("Sign out").performScrollTo().assertIsDisplayed()}

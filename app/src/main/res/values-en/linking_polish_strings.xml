@@ -27,4 +27,17 @@
     <string name="acct_privacy_sub">Learn how your information is used and protected.</string>
     <string name="acct_edit_photo">Edit photo</string>
     <string name="acct_more">View more</string>
+    <string name="lk_visits_today">visits today</string>
+    <string name="lk_agenda_today">Today’s agenda</string>
+    <string name="lk_view_agenda">View agenda</string>
+    <string name="lk_today_empty">Today’s visits will appear here</string>
+    <string name="lk_visit">Visit</string>
+    <string name="lk_visit_completed">Completed</string>
+    <string name="lk_visit_cancelled">Cancelled</string>
+    <string name="lk_visit_scheduled">Scheduled</string>
+    <string name="lk_action_soon">Coming soon</string>
+    <string name="lk_care_history">Care history</string>
+    <string name="lk_care_unavailable">Care history is not available yet.</string>
+    <string name="lk_schedule">Schedule visit</string>
+    <string name="lk_record_care">Record care</string>
 </resources>

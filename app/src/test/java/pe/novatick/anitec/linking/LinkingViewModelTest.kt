@@ -65,5 +65,10 @@ class LinkingViewModelTest {
  @Test fun noticeConsumptionDoesNotDismissLaterOperation(){
   val vm=LinkingViewModel(Fake(),Role.VETERINARIO,Dispatchers.Unconfined);vm.respond("id",false);vm.consumeNotice("accepted");assertEquals("rejected",vm.state.value.notice);vm.consumeNotice("rejected");assertNull(vm.state.value.notice);vm.close()
  }
+ @Test fun todayReadCannotReturnOldDayDataOrSurviveLogout()=runTest {
+  val gate=CompletableDeferred<Unit>()
+  val f=object:Fake(){override suspend fun todayVisits(day:VisitDay):List<HomeVisit>{if(day.start==0L)withContext(NonCancellable){gate.await()};return listOf(HomeVisit("id",null,"QA",day.start,"PROGRAMADA",null))}}
+  val vm=LinkingViewModel(f,Role.VETERINARIO,StandardTestDispatcher(testScheduler));vm.readToday(VisitDay(0,1));runCurrent();vm.readToday(VisitDay(1,2));runCurrent();gate.complete(Unit);advanceUntilIdle();assertEquals(1L,vm.state.value.today.value!!.single().time);vm.close();assertEquals(LinkingState(),vm.state.value)
+ }
 
 }

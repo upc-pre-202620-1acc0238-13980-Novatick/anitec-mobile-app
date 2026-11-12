@@ -24,6 +24,22 @@ class VeterinaryReadTest {
  private fun reply(data:String){server.enqueue(MockResponse().setHeader("Content-Type","application/json").setBody("""{"success":true,"message":"ok","timestamp":"2026-11-11T12:00:00Z","data":$data}"""))}
  private fun allowed(){reply("""{"activeLinksCount":1,"farmers":[{"farmerId":"$owner","farmerName":"Owner","animalsCount":1,"farms":[{"farmId":"$farm","farmName":"Farm","animalsCount":1}]}]}""")}
  private fun detail(farmId:String=farm)="""{"id":"$animal","code":"QA-001","name":"Luna","species":"Bovino","speciesId":"$species","sex":"HEMBRA","status":"ACTIVO","farmId":"$farmId","farmName":"Farm","version":2,"birthDate":"2021-01-01"}"""
+ @Test fun todayVisitReadUsesUtcBoundsAndExcludesNextDay()=runBlocking {
+  val day=pe.novatick.anitec.features.linking.domain.VisitDay.current(0,java.util.TimeZone.getTimeZone("UTC"))
+  fun visit(id:String,at:String)="""{"id":"$id","animalId":"$animal","animalName":"Luna","farmerId":"$owner","farmerName":"Owner","type":"VISITA","scheduledAt":"$at","status":"PROGRAMADA"}"""
+  reply("["+visit(animal,"1970-01-01T00:00:00Z")+","+visit(farm,"1970-01-02T00:00:00Z")+"]")
+  assertEquals(1,repo.todayVisits(day).size);val request=server.takeRequest();assertEquals("GET",request.method);assertEquals("1970-01-01T00:00:00Z",request.requestUrl!!.queryParameter("from"));assertEquals("1970-01-02T00:00:00Z",request.requestUrl!!.queryParameter("to"))
+ }
+ @Test fun dayWindowUsesCivilTimezoneAndHandlesDaylightSaving(){
+  val parser=java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'",java.util.Locale.US).apply{timeZone=java.util.TimeZone.getTimeZone("UTC")}
+  val day=pe.novatick.anitec.features.linking.domain.VisitDay.current(parser.parse("2024-11-03T12:00:00Z")!!.time,java.util.TimeZone.getTimeZone("America/New_York"))
+  assertEquals(25*60*60*1000L,day.end-day.start);assertFalse(day.contains(day.end));assertTrue(day.contains(day.start))
+ }
+ @Test fun visitFailureIsNotAnEmptyDayAndOwnerCannotQuery()=runBlocking {
+  val day=pe.novatick.anitec.features.linking.domain.VisitDay.current();role=Role.GANADERO
+  try{repo.todayVisits(day);fail()}catch(e:AuthFailure){assertEquals(403,e.status)};assertEquals(0,server.requestCount)
+  role=Role.VETERINARIO;server.enqueue(MockResponse().setResponseCode(403));try{repo.todayVisits(day);fail()}catch(e:AuthFailure){assertEquals(403,e.status)};assertEquals(1,server.requestCount)
+ }
  @Test fun farmLocationIsFreeTextAndOnlySelectedOwnersFarmsAreExposed()=runBlocking {
   allowed();reply("""[{"id":"$farm","name":"Farm","location":"Camino norte","ownerId":"$owner","createdAt":"2026-11-11T12:00:00Z"},{"id":"$otherFarm","name":"Other","location":"Private","ownerId":"$vet","createdAt":"2026-11-11T12:00:00Z"}]""")
   val farms=repo.farms(owner);assertEquals(1,farms.size);assertEquals("Camino norte",farms.single().location);assertEquals("/api/v1/vet-links/my-farmers",server.takeRequest().path);assertEquals("/api/v1/farms",server.takeRequest().path)

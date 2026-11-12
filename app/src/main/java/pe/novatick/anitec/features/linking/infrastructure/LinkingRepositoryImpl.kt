@@ -60,6 +60,18 @@ class LinkingRepositoryImpl(private val api: LinkingApi,private val requests: Au
   role(Role.GANADERO);val target=this.id(id);val d=requests.execute {expected(api.revoke(it,target))}
   if(this.id(d.linkId)!=target || d.status!="REVOCADA") invalid();date(d.revokedAt);Unit
  }
+ override suspend fun todayVisits(day: VisitDay)=mapped {
+  role(Role.VETERINARIO)
+  val result=requests.execute {expected(api.visits(it,day.utc(day.start),day.utc(day.end)))}.map {d->
+   id(d.animalId);id(d.farmerId)
+   if(d.type !in listOf("VISITA","CONTROL") || d.status !in listOf("PROGRAMADA","COMPLETADA","CANCELADA"))invalid()
+   val raw=date(d.scheduledAt).replace(Regex("\\.\\d+Z$"),"Z")
+   val instant=SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'",Locale.US).apply {timeZone=java.util.TimeZone.getTimeZone("UTC")}.parse(raw)!!.time
+   HomeVisit(id(d.id),d.animalName,text(d.farmerName),instant,d.status!!,d.reason)
+  }
+  if(result.map {it.id}.distinct().size!=result.size)invalid()
+  result.filter {day.contains(it.time)}.sortedBy {it.time}
+ }
  override suspend fun observations(farmerId: String,animalId: String)=mapped {
   animal(farmerId,animalId) // Fresh link and selected-farmer animal scope before reading history.
   val wire=livestock ?: invalid()

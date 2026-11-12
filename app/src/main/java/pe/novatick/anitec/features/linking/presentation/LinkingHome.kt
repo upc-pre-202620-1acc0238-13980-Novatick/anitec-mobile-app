@@ -13,13 +13,16 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.*
 import pe.novatick.anitec.R
 import pe.novatick.anitec.features.auth.domain.Profile
+import pe.novatick.anitec.features.linking.domain.VisitDay
+import kotlinx.coroutines.delay
 import pe.novatick.anitec.features.livestock.presentation.*
 import pe.novatick.anitec.ui.components.RancherHeaderShape
 import pe.novatick.anitec.ui.theme.*
 
-/** Figma 104:3913; only linking data is live. Agenda remains explicitly unavailable. */
+/** Figma 104:3913; today's visits are read-only, full agenda and clinical actions remain unavailable. */
 @Composable fun VeterinaryHome(vm: LinkingViewModel,profile: Profile,farmers: ()->Unit,invitations: ()->Unit,account: ()->Unit) {
  val s by vm.state.collectAsState()
+ LaunchedEffect(vm){while(true){vm.readToday();val now=System.currentTimeMillis();delay((VisitDay.current(now).end-now).coerceAtLeast(1000))}}
  Column(Modifier.fillMaxSize().background(Color.White).verticalScroll(rememberScrollState())) {
   Column(Modifier.fillMaxWidth().clip(RancherHeaderShape).background(PrimaryGreenAccent).padding(horizontal=28.dp,vertical=30.dp)) {
    Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -34,16 +37,9 @@ import pe.novatick.anitec.ui.theme.*
    }
   }
   Column(Modifier.padding(horizontal=28.dp,vertical=16.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-   Surface(onClick=farmers,shape=RoundedCornerShape(18.dp),color=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border),shadowElevation=5.dp,modifier=Modifier.fillMaxWidth()) {
-    Row(Modifier.padding(16.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-     Box(Modifier.size(40.dp).background(LivestockVisuals.Mint,RoundedCornerShape(8.dp)),contentAlignment=Alignment.Center) {Icon(painterResource(R.drawable.link_home_farmers_official),null,Modifier.size(23.dp),tint=Color.Unspecified)}
-     Column(Modifier.weight(1f)) {
-      if(s.farmers.loading)LsLoading(stringResource(R.string.lk_loading))
-      s.farmers.value?.let {LsText(it.size.toString(),Modifier.testTag("home_link_count"),size=24,bold=true)}
-      LsText(stringResource(R.string.lk_linked_farmers),size=11,color=LivestockVisuals.Secondary)
-     }
-     Icon(painterResource(R.drawable.link_chevron_official),null,Modifier.size(17.dp),tint=Color.Unspecified)
-    }
+   Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+    HomeMetric(stringResource(R.string.lk_visits_today),s.today.value?.size?.toString() ?: "—",R.drawable.link_visit_metric_official,"home_visit_count",Modifier.weight(1f))
+    HomeMetric(stringResource(R.string.lk_linked_farmers),s.farmers.value?.size?.toString() ?: "—",R.drawable.link_home_farmers_official,"home_link_count",Modifier.weight(1f),farmers)
    }
    s.farmers.error?.let {LinkError(it);LsAction(stringResource(R.string.lk_reload),vm::refresh)}
    s.pending.value?.takeIf {it.isNotEmpty()}?.let {pending->
@@ -57,27 +53,50 @@ import pe.novatick.anitec.ui.theme.*
    s.pending.error?.let {LinkError(it);LsAction(stringResource(R.string.lk_reload),vm::refresh)}
    LsText(stringResource(R.string.lk_shortcuts),bold=true)
    Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-    HomeShortcut(stringResource(R.string.lk_farmers),R.drawable.link_home_farmers_official,Modifier.weight(1f),farmers)
-    HomeShortcut(stringResource(R.string.lk_invitations),R.drawable.link_mail_official,Modifier.weight(1f),invitations)
+    VeterinaryShortcut(stringResource(R.string.lk_farmers),R.drawable.link_home_farmers_official,Modifier.weight(1f),onClick=farmers)
+    VeterinaryShortcut(stringResource(R.string.lk_invitations),R.drawable.link_mail_official,Modifier.weight(1f),onClick=invitations)
    }
-   LsText(stringResource(R.string.lk_agenda),bold=true)
-   VeterinaryAgendaPlaceholder()
+   Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){LsText(stringResource(R.string.lk_agenda_today),Modifier.weight(1f),bold=true);TextButton({},enabled=false){LsText(stringResource(R.string.lk_view_agenda),size=10,color=NeutralSlate)}}
+   if(s.today.loading)LsLoading(stringResource(R.string.lk_loading))
+   s.today.error?.let {LinkError(it);LsAction(stringResource(R.string.lk_reload),{vm.readToday()})}
+   s.today.value?.let {items->if(items.isEmpty())VeterinaryAgendaPlaceholder(today=true) else Surface(shape=RoundedCornerShape(16.dp),color=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border)){
+    Column {items.forEachIndexed {index,item->
+     if(index>0)HorizontalDivider(color=LivestockVisuals.Border)
+     Row(Modifier.fillMaxWidth().padding(12.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)){
+      val locale=androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
+      LsText(java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT,locale).format(java.util.Date(item.time)),size=10,bold=true,color=PrimaryGreen)
+      Column(Modifier.weight(1f)){
+       LsText(item.reason?.takeIf(String::isNotBlank) ?: stringResource(R.string.lk_visit),size=11,bold=true)
+       LsText(listOfNotNull(item.animal,item.farmer).joinToString(" · "),size=9,color=NeutralSlate)
+       LsText(stringResource(when(item.status){"COMPLETADA"->R.string.lk_visit_completed;"CANCELADA"->R.string.lk_visit_cancelled;else->R.string.lk_visit_scheduled}),size=9,color=LivestockVisuals.Secondary)
+      }
+     }
+    }}
+   }}
   }
  }
 }
-@Composable private fun HomeShortcut(label: String,icon: Int,modifier: Modifier,onClick: ()->Unit) {
- Surface(onClick=onClick,shape=RoundedCornerShape(15.dp),color=Color(0xFFF4FCF7),border=BorderStroke(1.dp,LivestockVisuals.Mint),modifier=modifier) {
+@Composable private fun HomeMetric(label:String,count:String,icon:Int,tag:String,modifier:Modifier,onClick:(()->Unit)?=null){
+ val content:@Composable ()->Unit={Row(Modifier.heightIn(min=97.dp).padding(10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){
+  Box(Modifier.size(40.dp).background(LivestockVisuals.Mint,RoundedCornerShape(8.dp)),contentAlignment=Alignment.Center){Icon(painterResource(icon),null,if(icon==R.drawable.link_visit_metric_official)Modifier.size(25.dp,26.dp) else Modifier.size(23.dp),tint=Color.Unspecified)}
+  Column(Modifier.weight(1f)){LsText(count,Modifier.testTag(tag),size=24,bold=true);LsText(label,size=9,color=LivestockVisuals.Secondary)}
+ }}
+ if(onClick==null)Surface(modifier,shape=RoundedCornerShape(18.dp),color=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border),shadowElevation=5.dp,content=content)
+ else Surface(onClick=onClick,modifier=modifier,shape=RoundedCornerShape(18.dp),color=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border),shadowElevation=5.dp,content=content)
+}
+@Composable internal fun VeterinaryShortcut(label: String,icon: Int,modifier: Modifier,available:Boolean=true,onClick: ()->Unit={}) {
+ Surface(onClick=onClick,enabled=available,shape=RoundedCornerShape(15.dp),color=Color(0xFFF4FCF7),border=BorderStroke(1.dp,LivestockVisuals.Mint),modifier=modifier) {
   Row(Modifier.heightIn(min=64.dp).padding(10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-   Icon(painterResource(icon),null,Modifier.size(if(icon==R.drawable.link_home_farmers_official)23.dp else 20.dp),tint=PrimaryGreen)
-   LsText(label,size=10,bold=true)
+   Box(Modifier.size(33.dp).background(PrimaryGreenAccent,RoundedCornerShape(11.dp)),contentAlignment=Alignment.Center){Icon(painterResource(icon),null,Modifier.size(if(icon==R.drawable.link_home_farmers_official)23.dp else 20.dp),tint=Color.White)}
+   Column(Modifier.weight(1f)){LsText(label,size=10,bold=true);if(!available)LsText(stringResource(R.string.lk_action_soon),size=9,color=LivestockVisuals.Secondary)}
   }
  }
 }
-@Composable internal fun VeterinaryAgendaPlaceholder() {
+@Composable internal fun VeterinaryAgendaPlaceholder(today:Boolean=false) {
  Surface(shape=RoundedCornerShape(16.dp),color=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border),modifier=Modifier.fillMaxWidth()) {
   Column(Modifier.padding(22.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(10.dp)) {
    Icon(painterResource(R.drawable.link_calendar_official),null,Modifier.size(20.dp),tint=NeutralSlate)
-   LsText(stringResource(R.string.lk_upcoming_empty),size=12,color=LivestockVisuals.Secondary)
+   LsText(stringResource(if(today)R.string.lk_today_empty else R.string.lk_upcoming_empty),size=12,color=LivestockVisuals.Secondary)
    LsText(stringResource(R.string.lk_agenda_soon),size=10,color=NeutralSlate)
   }
  }
