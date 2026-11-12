@@ -60,6 +60,13 @@ class LinkingRepositoryImpl(private val api: LinkingApi,private val requests: Au
   role(Role.GANADERO);val target=this.id(id);val d=requests.execute {expected(api.revoke(it,target))}
   if(this.id(d.linkId)!=target || d.status!="REVOCADA") invalid();date(d.revokedAt);Unit
  }
+ override suspend fun observations(farmerId: String,animalId: String)=mapped {
+  animal(farmerId,animalId) // Fresh link and selected-farmer animal scope before reading history.
+  val wire=livestock ?: invalid()
+  requests.execute {expected(wire.observations(it,id(animalId)))}.map {d->
+   AnimalObservation(id(d.id),text(d.text),d.authorName?.takeIf(String::isNotBlank),d.date?.let {date(it,true)})
+  }.also {if(it.map {o->o.id}.distinct().size!=it.size) invalid()}
+ }
  // Reuse Livestock wire DTOs, but keep veterinarian scope separate from the owner's mutation repository.
  private suspend fun allowedFarmer(farmerId: String): LinkedFarmer {
   role(Role.VETERINARIO);val target=id(farmerId)

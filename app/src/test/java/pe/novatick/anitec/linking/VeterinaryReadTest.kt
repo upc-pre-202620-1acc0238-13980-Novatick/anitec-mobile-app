@@ -39,4 +39,21 @@ class VeterinaryReadTest {
  @Test fun farmerCannotEnterVeterinarianReadRoutes()=runBlocking {role=Role.GANADERO;try{repo.animals(owner);fail()}catch(e:AuthFailure){assertEquals(403,e.status)};assertEquals(0,server.requestCount)}
  @Test fun revokedAccessHttp403IsPreservedAndNotRetried()=runBlocking {allowed();server.enqueue(MockResponse().setResponseCode(403));try{repo.animals(owner);fail()}catch(e:AuthFailure){assertEquals(403,e.status)};assertEquals(2,server.requestCount)}
  @Test fun mismatchedInventoryOwnerFailsClosed()=runBlocking {allowed();reply("""{"totalActive":1,"content":[{"id":"$animal","code":"QA-001","species":"Bovino","speciesId":"$species","status":"ACTIVO","farmId":"$farm","ownerId":"$vet","version":2}]}""");try{repo.animals(owner);fail()}catch(e:AuthFailure){assertEquals(AuthProblem.INVALID_RESPONSE,e.problem)}}
+ @Test fun observationsRequireFreshOwnerScopeAndOnlyDispatchGet()=runBlocking {
+  allowed();reply(detail());reply("""[{"id":"80000000-0000-4000-8000-000000000001","text":"Actual observation","authorName":"Owner","date":"2026-11-10"}]""")
+  val result=repo.observations(owner,animal);assertEquals("2026-11-10",result.single().date);assertEquals("Owner",result.single().authorName)
+  server.takeRequest();server.takeRequest();val request=server.takeRequest();assertEquals("GET",request.method);assertEquals("/api/v1/animals/$animal/observations",request.path)
+ }
+ @Test fun foreignAnimalCannotDispatchObservationRead()=runBlocking {
+  allowed();reply(detail(otherFarm));try{repo.observations(owner,animal);fail()}catch(e:AuthFailure){assertEquals(403,e.status)};assertEquals(2,server.requestCount)
+ }
+ @Test fun observation403IsPreservedWithoutRetry()=runBlocking {
+  allowed();reply(detail());server.enqueue(MockResponse().setResponseCode(403));try{repo.observations(owner,animal);fail()}catch(e:AuthFailure){assertEquals(403,e.status)};assertEquals(3,server.requestCount)
+ }
+ @Test fun invalidObservationDateAndDuplicateIdsFailClosed()=runBlocking {
+  for(date in listOf("2026-02-30","2026-11-10")){
+   allowed();reply(detail());val item="""{"id":"80000000-0000-4000-8000-000000000001","text":"Text","date":"$date"}""";reply("[$item,$item]")
+   try{repo.observations(owner,animal);fail()}catch(e:AuthFailure){assertEquals(AuthProblem.INVALID_RESPONSE,e.problem)}
+  }
+ }
 }

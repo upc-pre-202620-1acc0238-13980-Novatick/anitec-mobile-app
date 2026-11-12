@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -44,7 +45,7 @@ import pe.novatick.anitec.ui.theme.PrimaryGreenAccent
 fun RancherProfileScreen(
     userName: String = "Juan García",
     userEmail: String = "juan.garcia@email.com",
-    userRole: String = "Ganadero",
+    userRole: String? = null,
     onLogoutClick: () -> Unit = {}
 ) {
     Box(
@@ -56,7 +57,7 @@ fun RancherProfileScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(55.dp)
+                .height(24.dp)
                 .clip(CattleHeaderShape)
                 .background(PrimaryGreenAccent)
         )
@@ -65,27 +66,27 @@ fun RancherProfileScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(horizontal = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            item { Spacer(modifier = Modifier.height(35.dp)) }
+            item { Spacer(modifier = Modifier.height(28.dp)) }
 
             // TÍTULO Y SUBTÍTULO
             item {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Mi cuenta",
+                        text = stringResource(R.string.lk_profile),
                         fontFamily = Poppins,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 30.sp,
-                        color = PrimaryGreenAccent
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp,
+                        color = pe.novatick.anitec.ui.theme.PrimaryGreen
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Datos y preferencias",
+                        text = stringResource(R.string.acct_sub),
                         fontFamily = Poppins,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                         color = NeutralSlate
                     )
                 }
@@ -104,24 +105,24 @@ fun RancherProfileScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(18.dp),
+                            .padding(15.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Avatar Circular con Iniciales "JG" y botón de edición
                         Box {
                             Box(
                                 modifier = Modifier
-                                    .size(74.dp)
+                                    .size(72.dp)
                                     .clip(CircleShape)
                                     .background(Color.White),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "JG",
+                                    text = pe.novatick.anitec.features.livestock.presentation.livestockInitials(userName, ""),
                                     fontFamily = Poppins,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 26.sp,
-                                    color = PrimaryGreenAccent
+                                    fontSize = 28.sp,
+                                    color = pe.novatick.anitec.ui.theme.PrimaryGreen
                                 )
                             }
 
@@ -137,7 +138,7 @@ fun RancherProfileScreen(
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_edit),
-                                    contentDescription = "Editar foto",
+                                    contentDescription = stringResource(R.string.acct_edit_photo),
                                     tint = Color.White,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -146,12 +147,13 @@ fun RancherProfileScreen(
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        Column {
+                        Column(Modifier.weight(1f)) {
                             Text(
                                 text = userName,
+                                lineHeight = 20.sp,
                                 fontFamily = Poppins,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
+                                fontSize = 15.sp,
                                 color = Color.White
                             )
                             Spacer(modifier = Modifier.height(2.dp))
@@ -159,7 +161,7 @@ fun RancherProfileScreen(
                                 text = userEmail,
                                 fontFamily = Poppins,
                                 fontWeight = FontWeight.Medium,
-                                fontSize = 13.sp,
+                                fontSize = 12.sp,
                                 color = Color.White.copy(alpha = 0.9f)
                             )
                             Spacer(modifier = Modifier.height(6.dp))
@@ -169,13 +171,13 @@ fun RancherProfileScreen(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(Color.White.copy(alpha = 0.22f))
-                                    .padding(horizontal = 12.dp, vertical = 3.dp)
+                                    .padding(horizontal = 7.dp, vertical = 3.dp)
                             ) {
                                 Text(
-                                    text = userRole,
+                                    text = userRole ?: stringResource(R.string.lk_farmer_role),
                                     fontFamily = Poppins,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp,
+                                    fontSize = 8.sp,
                                     color = Color.White
                                 )
                             }
@@ -189,10 +191,10 @@ fun RancherProfileScreen(
             // SECCIÓN 1: CUENTA
             item {
                 Text(
-                    text = "Cuenta",
+                    text = stringResource(R.string.acct_account),
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
+                    fontSize = 14.sp,
                     color = NeutralDark
                 )
 
@@ -200,9 +202,9 @@ fun RancherProfileScreen(
 
                 // Opción: Mi suscripción
                 ProfileOptionCard(
-                    iconRes = R.drawable.ic_shield,
-                    title = "Mi suscripción",
-                    subtitle = "Revisa tu plan y el estado de tu suscripción."
+                    iconRes = R.drawable.link_subscription_official,
+                    title = stringResource(R.string.acct_plan),
+                    subtitle = stringResource(R.string.acct_plan_sub)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -210,8 +212,8 @@ fun RancherProfileScreen(
                 // Opción: Editar perfil
                 ProfileOptionCard(
                     iconRes = R.drawable.ic_edit,
-                    title = "Editar perfil",
-                    subtitle = "Actualiza tu foto y tus datos personales."
+                    title = stringResource(R.string.acct_edit),
+                    subtitle = stringResource(R.string.acct_edit_sub)
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -220,10 +222,10 @@ fun RancherProfileScreen(
             // SECCIÓN 2: PREFERENCIAS
             item {
                 Text(
-                    text = "Preferencias",
+                    text = stringResource(R.string.acct_preferences),
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
+                    fontSize = 14.sp,
                     color = NeutralDark
                 )
 
@@ -232,8 +234,8 @@ fun RancherProfileScreen(
                 // Opción: Notificaciones
                 ProfileOptionCard(
                     iconRes = R.drawable.ic_bell,
-                    title = "Notificaciones",
-                    subtitle = "Configura los avisos que quieres recibir."
+                    title = stringResource(R.string.acct_notifications),
+                    subtitle = stringResource(R.string.acct_notifications_sub)
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -242,10 +244,10 @@ fun RancherProfileScreen(
             // SECCIÓN 3: AYUDA Y LEGAL
             item {
                 Text(
-                    text = "Ayuda y legal",
+                    text = stringResource(R.string.acct_legal),
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
+                    fontSize = 14.sp,
                     color = NeutralDark
                 )
 
@@ -254,8 +256,8 @@ fun RancherProfileScreen(
                 // Opción: Ayuda y contacto
                 ProfileOptionCard(
                     iconRes = R.drawable.ic_headphones,
-                    title = "Ayuda y contacto",
-                    subtitle = "Encuentra respuestas o comunícate con nosotros."
+                    title = stringResource(R.string.acct_help),
+                    subtitle = stringResource(R.string.acct_help_sub)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -263,8 +265,8 @@ fun RancherProfileScreen(
                 // Opción: Términos y condiciones
                 ProfileOptionCard(
                     iconRes = R.drawable.ic_document,
-                    title = "Términos y condiciones",
-                    subtitle = "Consulta las condiciones de uso de ANITEC."
+                    title = stringResource(R.string.acct_terms),
+                    subtitle = stringResource(R.string.acct_terms_sub)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -272,8 +274,8 @@ fun RancherProfileScreen(
                 // Opción: Política de privacidad
                 ProfileOptionCard(
                     iconRes = R.drawable.ic_lock,
-                    title = "Política de privacidad",
-                    subtitle = "Conoce cómo se utiliza y protege tu información."
+                    title = stringResource(R.string.acct_privacy),
+                    subtitle = stringResource(R.string.acct_privacy_sub)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -295,16 +297,16 @@ fun RancherProfileScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_logout),
-                            contentDescription = "Cerrar sesión",
+                            contentDescription = stringResource(R.string.lk_logout),
                             tint = Color(0xFFEF5350),
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Cerrar sesión",
+                            text = stringResource(R.string.lk_logout),
                             fontFamily = Poppins,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
+                            fontSize = 12.sp
                         )
                     }
                 }
@@ -325,7 +327,7 @@ private fun ProfileOptionCard(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(15.dp),
         border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
@@ -335,13 +337,13 @@ private fun ProfileOptionCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(11.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Contenedor verde claro con ícono verde
             Box(
                 modifier = Modifier
-                    .size(46.dp)
+                    .size(38.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(Color(0xFFE8F8EE)),
                 contentAlignment = Alignment.Center
@@ -349,8 +351,8 @@ private fun ProfileOptionCard(
                 Icon(
                     painter = painterResource(id = iconRes),
                     contentDescription = title,
-                    tint = PrimaryGreenAccent,
-                    modifier = Modifier.size(22.dp)
+                    tint = if(iconRes==R.drawable.link_subscription_official) Color.Unspecified else PrimaryGreenAccent,
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
@@ -361,7 +363,7 @@ private fun ProfileOptionCard(
                     text = title,
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
+                    fontSize = 11.sp,
                     color = NeutralDark
                 )
                 Spacer(modifier = Modifier.height(2.dp))
@@ -369,7 +371,7 @@ private fun ProfileOptionCard(
                     text = subtitle,
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Medium,
-                    fontSize = 11.sp,
+                    fontSize = 9.sp,
                     color = NeutralSlate
                 )
             }
@@ -379,7 +381,7 @@ private fun ProfileOptionCard(
             // Flecha derecha
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_right),
-                contentDescription = "Ver más",
+                contentDescription = stringResource(R.string.acct_more),
                 tint = NeutralDark,
                 modifier = Modifier.size(18.dp)
             )

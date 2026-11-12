@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lk_my_day">MI JORNADA</string>
+    <string name="lk_home_sub">Tus vínculos, en un solo lugar</string>
+    <string name="lk_linked_farmers">ganaderos vinculados</string>
+    <string name="lk_review_invites">Revísalas para empezar a colaborar</string>
+    <string name="lk_shortcuts">Accesos rápidos</string>
+    <string name="lk_upcoming_empty">Aquí aparecerán tus próximas visitas</string>
+    <string name="lk_agenda_soon">Agenda disponible próximamente</string>
+    <string name="lk_veterinarian_role">Veterinario</string>
+    <string name="lk_farmer_role">Ganadero</string>
+    <string name="acct_sub">Datos y preferencias</string>
+    <string name="acct_account">Cuenta</string>
+    <string name="acct_plan">Mi suscripción</string>
+    <string name="acct_plan_sub">Revisa tu plan y el estado de tu suscripción.</string>
+    <string name="acct_edit">Editar perfil</string>
+    <string name="acct_edit_sub">Actualiza tu foto y tus datos personales.</string>
+    <string name="acct_preferences">Preferencias</string>
+    <string name="acct_notifications">Notificaciones</string>
+    <string name="acct_notifications_sub">Configura los avisos que quieres recibir.</string>
+    <string name="acct_legal">Ayuda y legal</string>
+    <string name="acct_help">Ayuda y contacto</string>
+    <string name="acct_help_sub">Encuentra respuestas o comunícate con nosotros.</string>
+    <string name="acct_terms">Términos y condiciones</string>
+    <string name="acct_terms_sub">Consulta las condiciones de uso de ANITEC.</string>
+    <string name="acct_privacy">Política de privacidad</string>
+    <string name="acct_privacy_sub">Conoce cómo se utiliza y protege tu información.</string>
+    <string name="acct_edit_photo">Editar foto</string>
+    <string name="acct_more">Ver más</string>
+</resources>

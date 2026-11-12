@@ -52,5 +52,18 @@ class LinkingViewModelTest {
   val f=object:Fake(){override suspend fun animals(farmerId:String):pe.novatick.anitec.features.livestock.domain.Inventory{if(denied)throw AuthFailure(AuthProblem.FORBIDDEN,403);return pe.novatick.anitec.features.livestock.domain.Inventory(0,emptyList())}}
   val vm=LinkingViewModel(f,Role.VETERINARIO,StandardTestDispatcher(testScheduler));vm.readAnimals("owner");advanceUntilIdle();assertNotNull(vm.state.value.animals.value);denied=true;vm.readAnimals("owner");advanceUntilIdle();assertNull(vm.state.value.animals.value);assertEquals(403,vm.state.value.animals.error!!.status);vm.close()
  }
+ @Test fun observationResponsesCannotCrossAnimalOwnerOrLogout()=runTest {
+  val gate=CompletableDeferred<Unit>()
+  val f=object:Fake(){override suspend fun observations(farmerId:String,animalId:String):List<pe.novatick.anitec.features.livestock.domain.AnimalObservation>{if(animalId=="old")withContext(NonCancellable){gate.await()};return listOf(pe.novatick.anitec.features.livestock.domain.AnimalObservation(animalId,farmerId,null,null))}}
+  val vm=LinkingViewModel(f,Role.VETERINARIO,StandardTestDispatcher(testScheduler));vm.readObservations("first","old");runCurrent();vm.readObservations("second","new");runCurrent();gate.complete(Unit);advanceUntilIdle();assertEquals("second",vm.state.value.observations.value!!.single().text);vm.close();assertEquals(LinkingState(),vm.state.value)
+ }
+ @Test fun observationFailureClearsPreviousHistoryAndDoesNotPretendEmpty()=runTest {
+  var failed=false
+  val f=object:Fake(){override suspend fun observations(farmerId:String,animalId:String):List<pe.novatick.anitec.features.livestock.domain.AnimalObservation>{if(failed)throw AuthFailure(AuthProblem.FORBIDDEN,403);return emptyList()}}
+  val vm=LinkingViewModel(f,Role.VETERINARIO,StandardTestDispatcher(testScheduler));vm.readObservations("f","a");advanceUntilIdle();assertNotNull(vm.state.value.observations.value);failed=true;vm.readObservations("f","a");assertNull(vm.state.value.observations.value);advanceUntilIdle();assertEquals(403,vm.state.value.observations.error!!.status);vm.close()
+ }
+ @Test fun noticeConsumptionDoesNotDismissLaterOperation(){
+  val vm=LinkingViewModel(Fake(),Role.VETERINARIO,Dispatchers.Unconfined);vm.respond("id",false);vm.consumeNotice("accepted");assertEquals("rejected",vm.state.value.notice);vm.consumeNotice("rejected");assertNull(vm.state.value.notice);vm.close()
+ }
 
 }

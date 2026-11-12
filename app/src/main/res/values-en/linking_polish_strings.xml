@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lk_my_day">MY DAY</string>
+    <string name="lk_home_sub">Your links, all in one place</string>
+    <string name="lk_linked_farmers">linked farmers</string>
+    <string name="lk_review_invites">Review them to start collaborating</string>
+    <string name="lk_shortcuts">Quick access</string>
+    <string name="lk_upcoming_empty">Your upcoming visits will appear here</string>
+    <string name="lk_agenda_soon">Agenda coming soon</string>
+    <string name="lk_veterinarian_role">Veterinarian</string>
+    <string name="lk_farmer_role">Farmer</string>
+    <string name="acct_sub">Details and preferences</string>
+    <string name="acct_account">Account</string>
+    <string name="acct_plan">My subscription</string>
+    <string name="acct_plan_sub">Review your plan and subscription status.</string>
+    <string name="acct_edit">Edit profile</string>
+    <string name="acct_edit_sub">Update your photo and personal details.</string>
+    <string name="acct_preferences">Preferences</string>
+    <string name="acct_notifications">Notifications</string>
+    <string name="acct_notifications_sub">Choose the notifications you want to receive.</string>
+    <string name="acct_legal">Help and legal</string>
+    <string name="acct_help">Help and contact</string>
+    <string name="acct_help_sub">Find answers or contact us.</string>
+    <string name="acct_terms">Terms and conditions</string>
+    <string name="acct_terms_sub">Read the ANITEC terms of use.</string>
+    <string name="acct_privacy">Privacy policy</string>
+    <string name="acct_privacy_sub">Learn how your information is used and protected.</string>
+    <string name="acct_edit_photo">Edit photo</string>
+    <string name="acct_more">View more</string>
+</resources>

@@ -44,7 +44,12 @@ import pe.novatick.anitec.ui.theme.*
 @Composable private fun LinkFeedback(s: LinkingState,vm: LinkingViewModel){
  s.error?.let {LinkError(it)}
  if(s.uncertain){LsNotice(stringResource(R.string.lk_uncertain),true);TextButton(onClick=vm::acknowledgeUncertain,enabled=!s.busy){LsText(stringResource(R.string.lk_ack),size=11,color=PrimaryGreen)}}
- s.notice?.let {val res=when(it){"sent"->R.string.lk_sent;"unconfirmed"->R.string.lk_unconfirmed;"accepted"->R.string.lk_accepted;"rejected"->R.string.lk_rejected;else->R.string.lk_revoked};LsNotice(stringResource(res))}
+ s.notice?.takeIf {it !in listOf("accepted","rejected","revoked")}?.let {val res=when(it){"sent"->R.string.lk_sent;"unconfirmed"->R.string.lk_unconfirmed;"accepted"->R.string.lk_accepted;"rejected"->R.string.lk_rejected;else->R.string.lk_revoked};LsNotice(stringResource(res))}
+ val snackbar=remember {SnackbarHostState()}
+ val notice=s.notice
+ val message=when(notice){"accepted"->stringResource(R.string.lk_accepted);"rejected"->stringResource(R.string.lk_rejected);"revoked"->stringResource(R.string.lk_revoked);else->null}
+ LaunchedEffect(notice){if(message!=null){snackbar.showSnackbar(message,duration=SnackbarDuration.Short);vm.consumeNotice(notice!!)}}
+ SnackbarHost(snackbar)
  if(s.busy)LsLoading(stringResource(R.string.lk_loading))
 }
 @Composable private fun <T> LinkReadContent(read: LinkRead<T>,vm: LinkingViewModel,retry: ()->Unit=vm::refresh,content: @Composable (T)->Unit){
@@ -117,15 +122,15 @@ import pe.novatick.anitec.ui.theme.*
    Icon(painterResource(R.drawable.ls_mail_official),null,Modifier.size(20.dp),tint=Color(0xFFE1A62C));Column(Modifier.weight(1f)){LsText(sent.email,size=11,bold=true);LsText(stringResource(R.string.lk_pending_status),size=9,color=NeutralSlate)}
   }};LsText(stringResource(R.string.lk_sent_receipt),size=9,color=NeutralSlate)} ?: LsText(stringResource(R.string.lk_outgoing_unavailable),size=11,color=NeutralSlate)
  }
- remove?.let {link->LsModal(stringResource(R.string.lk_remove_title),{if(!s.busy)remove=null},content={LsText(link.vetName,bold=true);LsText(stringResource(R.string.lk_remove_info))},actions={
-  LsAction(stringResource(R.string.lk_cancel),{remove=null},enabled=!s.busy)
-  LsAction(stringResource(R.string.lk_remove),{remove=null;vm.revoke(link.id)},primary=true,enabled=!s.busy && !s.uncertain)
- })}
+ remove?.let {link->RemoveVetDialog(link.vetName,{remove=null},{remove=null;vm.revoke(link.id)})}
 }
 @Composable private fun LinkMiniAction(label: String,onClick: ()->Unit,enabled: Boolean=true,primary: Boolean=false,danger: Boolean=false){
  val color=if(danger)Color(0xFFDF6262) else PrimaryGreen
- TextButton(onClick=onClick,enabled=enabled,contentPadding=PaddingValues(0.dp),modifier=Modifier.heightIn(min=48.dp).widthIn(min=60.dp)){
-  Box(Modifier.heightIn(min=28.dp).background(if(primary) PrimaryGreenAccent else Color.White,RoundedCornerShape(8.dp)).border(1.dp,if(primary)PrimaryGreenAccent else color,RoundedCornerShape(8.dp)).padding(horizontal=8.dp,vertical=4.dp),contentAlignment=Alignment.Center){LsText(label,size=10,bold=primary,color=if(primary)Color.White else color)}
+ Box(Modifier.heightIn(min=48.dp).widthIn(min=64.dp),contentAlignment=Alignment.Center){
+  Surface(onClick=onClick,enabled=enabled,shape=RoundedCornerShape(8.dp),color=if(primary) PrimaryGreenAccent else Color.White,
+   border=BorderStroke(1.dp,if(primary)PrimaryGreenAccent else color),modifier=Modifier.heightIn(min=36.dp)) {
+   Box(Modifier.padding(horizontal=9.dp,vertical=8.dp),contentAlignment=Alignment.Center){LsText(label,size=10,bold=primary,color=if(primary)Color.White else color)}
+  }
  }
 }
 @Composable private fun PendingCards(s: LinkingState,vm: LinkingViewModel,compact: Boolean=false){
@@ -134,7 +139,7 @@ import pe.novatick.anitec.ui.theme.*
   items.forEach {item->if(compact){LinkCard {
    LinkAvatar(item.farmerName)
    Column(Modifier.weight(1f)){LsText(item.farmerName,size=11,bold=true);LsText(stringResource(R.string.lk_date,linkDate(item.sentDate)),size=9,color=NeutralSlate)}
-   LinkMiniAction(stringResource(R.string.lk_reject),{vm.respond(item.id,false)},enabled=!s.busy && !s.uncertain)
+   LinkMiniAction(stringResource(R.string.lk_reject),{vm.respond(item.id,false)},enabled=!s.busy && !s.uncertain,danger=true)
    LinkMiniAction(stringResource(R.string.lk_accept),{vm.respond(item.id,true)},enabled=!s.busy && !s.uncertain,primary=true)
   }} else Surface(shape=RoundedCornerShape(17.dp),border=BorderStroke(1.dp,LivestockVisuals.Border),color=Color.White,modifier=Modifier.fillMaxWidth()){
    Column(Modifier.padding(15.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
@@ -142,7 +147,7 @@ import pe.novatick.anitec.ui.theme.*
      LsText(item.farmerName,size=12,bold=true);LsText(stringResource(R.string.lk_date,linkDate(item.sentDate)),size=10,color=NeutralSlate);LsText(stringResource(R.string.lk_request_detail),size=10,color=LivestockVisuals.Secondary)
     }}
     Row(horizontalArrangement=Arrangement.spacedBy(9.dp)){
-     LsAction(stringResource(R.string.lk_reject),{vm.respond(item.id,false)},Modifier.weight(1f).testTag("link_reject_"+item.id),enabled=!s.busy && !s.uncertain)
+     OutlinedButton({vm.respond(item.id,false)},Modifier.weight(1f).heightIn(min=48.dp).testTag("link_reject_"+item.id),enabled=!s.busy && !s.uncertain,shape=RoundedCornerShape(14.dp),border=BorderStroke(1.dp,Color(0xFFDF6262)),contentPadding=PaddingValues(horizontal=8.dp,vertical=10.dp)){LsText(stringResource(R.string.lk_reject),size=12,bold=true,color=Color(0xFFDF6262))}
      LsAction(stringResource(R.string.lk_accept),{vm.respond(item.id,true)},Modifier.weight(1f).testTag("link_accept_"+item.id),primary=true,enabled=!s.busy && !s.uncertain)
     }
    }
@@ -161,7 +166,7 @@ import pe.novatick.anitec.ui.theme.*
   LinkReadContent(s.farmers,vm){farmers->val found=farmers.filter {it.name.contains(search,true)}
    if(farmers.isEmpty())LsNotice(stringResource(R.string.lk_no_links)) else if(found.isEmpty())LsNotice(stringResource(R.string.lk_no_match))
    found.forEach {farmer->LinkCard({detail(farmer.id)}){
-    LinkAvatar(farmer.name);Column(Modifier.weight(1f)){LsText(farmer.name,size=12,bold=true);LsText(pluralStringResource(R.plurals.lk_animals,if(farmer.animals==1L)1 else 2,farmer.animals)+" · "+pluralStringResource(R.plurals.lk_farm_count,farmer.farms.size,farmer.farms.size),size=10,color=NeutralSlate)}
+    LinkAvatar(farmer.name);Column(Modifier.weight(1f)){LsText(farmer.name,size=11,bold=true);LsText(pluralStringResource(R.plurals.lk_animals,if(farmer.animals==1L)1 else 2,farmer.animals)+" · "+pluralStringResource(R.plurals.lk_farm_count,farmer.farms.size,farmer.farms.size),size=10,color=NeutralSlate)}
     Icon(painterResource(R.drawable.link_chevron_official),null,tint=Color.Unspecified,modifier=Modifier.size(17.dp))
    }}
   }
@@ -183,12 +188,13 @@ import pe.novatick.anitec.ui.theme.*
  AnimalPage(farmer?.name ?: stringResource(R.string.lk_farmers),back,subtitle=stringResource(R.string.lk_farmer_sub)){
   LinkReadContent(s.farmers,vm){
    if(farmer==null)LsNotice(stringResource(R.string.lk_detail_lost),true) else {
-    LinkCard {LinkAvatar(farmer.name,51);Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(3.dp)){
-     LsText(farmer.name,size=12,bold=true);link?.let {LsText(stringResource(R.string.lk_since,linkDate(it.linkedAt)),size=9,color=NeutralSlate)}
+    LinkCard {LinkAvatar(farmer.name,40);Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(3.dp)){
+     LsText(farmer.name,size=11,bold=true);link?.let {LsText(stringResource(R.string.lk_since,linkDate(it.linkedAt)),size=9,color=NeutralSlate)}
      LsText(stringResource(R.string.lk_access_active),Modifier.background(LivestockVisuals.Mint,RoundedCornerShape(10.dp)).padding(horizontal=7.dp,vertical=4.dp),size=9,bold=true,color=PrimaryGreen)
     }}
    }
   }
+  LsText(stringResource(R.string.lk_farms),size=13,bold=true)
   LinkReadContent(if(scoped)s.farms else LinkRead(loading=true),vm,{vm.readFarms(id)}){farms->
    if(farms.isEmpty())LsNotice(stringResource(R.string.lk_no_farms))
    farms.forEach {farm->Surface(Modifier.fillMaxWidth(),shape=RoundedCornerShape(16.dp),color=Color.White,border=BorderStroke(1.dp,LivestockVisuals.Border)){
@@ -226,10 +232,20 @@ import pe.novatick.anitec.ui.theme.*
   }
  }
 }
-@Composable fun LinkedAnimalDetailScreen(vm: LinkingViewModel,farmer: String,id: String,back: ()->Unit){
- val s by vm.state.collectAsState();LaunchedEffect(farmer,id){vm.readAnimal(farmer,id)}
+@Composable private fun observationRead(s: LinkingState,farmer: String,id: String): ReadState<List<pe.novatick.anitec.features.livestock.domain.AnimalObservation>> {
+ val read=if(s.farmerContext==farmer && s.observationAnimalId==id)s.observations else LinkRead(loading=true)
+ return ReadState(read.value,read.loading,read.error!=null)
+}
+@Composable fun LinkedAnimalDetailScreen(vm: LinkingViewModel,farmer: String,id: String,back: ()->Unit,allObservations: ()->Unit={}){
+ val s by vm.state.collectAsState();LaunchedEffect(farmer,id){vm.readAnimal(farmer,id);vm.readObservations(farmer,id)}
  val read=if(s.farmerContext==farmer && s.animalId==id)s.animal else LinkRead(loading=true)
- AnimalDetailScreen(LivestockState(animalDetailId=id,animalDetail=ReadState(read.value,read.loading,read.error!=null),animalDetailError=read.error),back,{vm.readAnimal(farmer,id)},readOnly=true)
+ AnimalDetailScreen(LivestockState(animalDetailId=id,animalDetail=ReadState(read.value,read.loading,read.error!=null),animalDetailError=read.error),back,{vm.readAnimal(farmer,id);vm.readObservations(farmer,id)},readOnly=true,observations={
+  ReadOnlyObservationSection(observationRead(s,farmer,id),{vm.readObservations(farmer,id)},allObservations)
+ })
+}
+@Composable fun LinkedObservationsScreen(vm: LinkingViewModel,farmer: String,id: String,back: ()->Unit){
+ val s by vm.state.collectAsState();LaunchedEffect(farmer,id){vm.readObservations(farmer,id)}
+ ReadOnlyObservationList(observationRead(s,farmer,id),{vm.readObservations(farmer,id)},back)
 }
 @Composable fun VeterinaryLinkingShell(repo: LinkingRepository,profile: Profile,logout: ()->Unit){
  val vm=remember(repo,profile.id){LinkingViewModel(repo,profile.role)}
@@ -240,14 +256,15 @@ import pe.novatick.anitec.ui.theme.*
  val labels=mapOf(VeterinarianTab.HOME to stringResource(R.string.lk_home),VeterinarianTab.AGENDA to stringResource(R.string.lk_agenda),VeterinarianTab.RANCHERS to stringResource(R.string.lk_farmers),VeterinarianTab.PROFILE to stringResource(R.string.lk_profile))
  Scaffold(containerColor=Color.White,bottomBar={VeterinarianBottomBar(tab,{selected->if(!s.busy)nav.navigate(when(selected){VeterinarianTab.HOME->"home";VeterinarianTab.PROFILE->"profile";VeterinarianTab.AGENDA->"agenda";else->"farmers"}){launchSingleTop=true;popUpTo("farmers")}},labels)}){padding->Box(Modifier.padding(padding).consumeWindowInsets(padding)){
   NavHost(nav,startDestination="farmers"){
-   composable("home"){LinkPage(profile.name+" "+profile.lastName,stringResource(R.string.lk_home)){LsAction(stringResource(R.string.lk_farmers),{nav.navigate("farmers")},Modifier.fillMaxWidth(),primary=true);LsAction(stringResource(R.string.lk_invitations),{nav.navigate("invitations")},Modifier.fillMaxWidth())}}
+   composable("home"){VeterinaryHome(vm,profile,{nav.navigate("farmers")},{nav.navigate("invitations")},{nav.navigate("profile")})}
    composable("farmers"){VeterinarianFarmersScreen(vm,{nav.navigate("farmer/$it")},{nav.navigate("invitations")})}
    composable("invitations"){VeterinarianInvitationsScreen(vm){nav.popBackStack()}}
    composable("farmer/{id}"){LinkedFarmerDetailScreen(vm,it.arguments?.getString("id").orEmpty(),{nav.popBackStack()},{nav.navigate("farmer/${it.arguments?.getString("id")}/animals")})}
    composable("farmer/{id}/animals"){entry->val owner=entry.arguments?.getString("id").orEmpty();LinkedAnimalsScreen(vm,owner,{nav.popBackStack()}){nav.navigate("farmer/$owner/animal/$it")}}
-   composable("farmer/{id}/animal/{animalId}"){entry->LinkedAnimalDetailScreen(vm,entry.arguments?.getString("id").orEmpty(),entry.arguments?.getString("animalId").orEmpty()){nav.popBackStack()}}
-   composable("profile"){pe.novatick.anitec.ui.screens.home.RancherProfileScreen(userName=profile.name+" "+profile.lastName,userEmail=profile.email,onLogoutClick=logout)}
-   composable("agenda"){LinkPage(stringResource(R.string.lk_agenda),stringResource(R.string.lk_clinical_later)) {}}
+   composable("farmer/{id}/animal/{animalId}"){entry->val owner=entry.arguments?.getString("id").orEmpty();val animal=entry.arguments?.getString("animalId").orEmpty();LinkedAnimalDetailScreen(vm,owner,animal,{nav.popBackStack()},{nav.navigate("farmer/$owner/animal/$animal/observations")})}
+   composable("farmer/{id}/animal/{animalId}/observations"){entry->LinkedObservationsScreen(vm,entry.arguments?.getString("id").orEmpty(),entry.arguments?.getString("animalId").orEmpty()){nav.popBackStack()}}
+   composable("profile"){pe.novatick.anitec.ui.screens.home.RancherProfileScreen(userName=profile.name+" "+profile.lastName,userEmail=profile.email,userRole=stringResource(R.string.lk_veterinarian_role),onLogoutClick=logout)}
+   composable("agenda"){LinkPage(stringResource(R.string.lk_agenda),stringResource(R.string.lk_agenda_soon)) {VeterinaryAgendaPlaceholder()}}
   }
  }}
 }
