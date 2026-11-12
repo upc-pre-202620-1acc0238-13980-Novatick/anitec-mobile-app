@@ -24,11 +24,15 @@ import pe.novatick.anitec.ui.theme.*
 import pe.novatick.anitec.ui.components.*
 import pe.novatick.anitec.ui.navigation.RancherTab
 import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
+import pe.novatick.anitec.features.linking.presentation.*
 
 @Composable fun LivestockShell(vm: LivestockViewModel,profile: Profile,onLogout: ()->Unit,linking: pe.novatick.anitec.features.linking.domain.LinkingRepository?=null) {
     val linkingVm=remember(linking,profile.id) {linking?.let {pe.novatick.anitec.features.linking.presentation.LinkingViewModel(it,profile.role)}}
     DisposableEffect(linkingVm){linkingVm?.refresh();onDispose {linkingVm?.close()}}
+    val visits=remember(linking,profile.id){linking?.let{FarmerVisitsViewModel(it,profile.role)}}
+    DisposableEffect(visits){onDispose{visits?.close()}}
     val nav=rememberNavController();val entry by nav.currentBackStackEntryAsState()
+    val selectVisit:(pe.novatick.anitec.features.linking.domain.FarmerVisit)->Unit={nav.navigate("farmer_visit/${it.visit.id}")}
     val tab=when(entry?.destination?.route) { "cattle","animal_register","animal/{id}","animal/{id}/edit","animal/{id}/observations","animal/{id}/observation/new"->RancherTab.CATTLE;"profile"->RancherTab.PROFILE;"vets","invite_vet"->RancherTab.VETS;else->RancherTab.HOME }
     val obs by vm.observations.uiState.collectAsState();val state by vm.uiState.collectAsState();val type=MaterialTheme.typography
     val labels=mapOf(RancherTab.HOME to stringResource(R.string.ls_tab_home),RancherTab.CATTLE to stringResource(R.string.ls_tab_cattle),
@@ -42,7 +46,10 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
             composable("home") { pe.novatick.anitec.RancherHomeScreen(onNavigateToCattle={nav.navigate("cattle")},onNavigateToLinkedVets={nav.navigate("vets")},
                 onNavigateToRegisterAnimal={},onNavigateToInviteVets={nav.navigate("invite_vet")},onNavigateToVisits={},onNavigateToVisitDetail={},onNavigateToIndicationDetail={},
                 profileName=profile.name,profileInitials=livestockInitials(profile.name,profile.lastName),
-                livestockContent={ LivestockHomeSummary(state.capacity,onInvite={nav.navigate("invite_vet")},onRegister={vm.beginAnimal();nav.navigate("animal_register")},onRetry=vm::refreshFoundation) {nav.navigate("cattle")} }) }
+                livestockContent={ LivestockHomeSummary(state.capacity,onInvite={nav.navigate("invite_vet")},onRegister={vm.beginAnimal();nav.navigate("animal_register")},onRetry=vm::refreshFoundation,
+                    visitsContent=visits?.let{model->{ FarmerUpcomingHome(model,{nav.navigate("farmer_visits")},selectVisit) }}) {nav.navigate("cattle")} }) }
+            composable("farmer_visits"){visits?.let{FarmerUpcomingScreen(it,{nav.popBackStack()},selectVisit)}}
+            composable("farmer_visit/{id}"){route->visits?.let{FarmerVisitDetailScreen(it,route.arguments?.getString("id").orEmpty()){nav.popBackStack()}}}
             composable("cattle") {LivestockInventoryScreen(state,vm,onRegister={vm.beginAnimal();nav.navigate("animal_register")},onAnimal={nav.navigate("animal/$it")})}
             composable("animal_register") {AnimalRegistrationScreen(state,vm,{nav.popBackStack()}) {nav.navigate("animal/$it") {popUpTo("animal_register") {inclusive=true}}}}
             composable("animal/{id}") {back -> val id=back.arguments?.getString("id").orEmpty()
@@ -81,7 +88,7 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
     }
     if(showError && value.failed) LsNotice(stringResource(if(value.stale) R.string.ls_stale else R.string.ls_error),true)
 }
-@Composable internal fun LivestockHomeSummary(value: ReadState<Capacity>,onRetry: ()->Unit={},onRegister: ()->Unit={},onInvite: ()->Unit={},onInventory: ()->Unit) {
+@Composable internal fun LivestockHomeSummary(value: ReadState<Capacity>,onRetry: ()->Unit={},onRegister: ()->Unit={},onInvite: ()->Unit={},visitsContent:(@Composable ()->Unit)?=null,onInventory: ()->Unit) {
     value.value?.let { capacity ->
         Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             Metric(capacity.activeAnimals,stringResource(R.string.ls_metric_active),R.drawable.ic_cow,Modifier.weight(1f).testTag("home_inventory_active"),onInventory)
@@ -93,7 +100,7 @@ import pe.novatick.anitec.ui.screens.home.RancherProfileScreen
         LsNotice(stringResource(R.string.ls_partial_error),true)
         LsReadIssue(stringResource(R.string.ls_capacity_error),value.stale,onRetry)
     }
-    LivestockHomeSections(onRegister,onInvite)
+    LivestockHomeSections(onRegister,onInvite,visitsContent)
 
 }
 @Composable private fun Metric(value: Long,label: String,icon: Int,modifier: Modifier,onClick: ()->Unit) {

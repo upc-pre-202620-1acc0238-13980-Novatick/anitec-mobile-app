@@ -71,7 +71,7 @@
     <string name="ls_invite_vet">Invite veterinarian</string>
     <string name="ls_upcoming_visits">Upcoming visits</string>
     <string name="ls_view_visits">View visits</string>
-    <string name="ls_visits_neutral">Your upcoming visits will appear here</string>
+    <string name="ls_visits_neutral">Upcoming visits are not yet available for ranchers.</string>
     <string name="ls_recent_indications">Recent instructions</string>
     <string name="ls_indications_neutral">Your instructions will appear here</string>
     <string name="ls_available_later">Available soon.</string>

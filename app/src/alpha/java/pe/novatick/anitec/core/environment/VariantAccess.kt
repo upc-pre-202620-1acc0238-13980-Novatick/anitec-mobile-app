@@ -26,6 +26,12 @@ import pe.novatick.anitec.R
 
 /** Alpha source set only: shared staging credential is never written to disk. */
 internal object VariantAccess {
+    private val openAccess=staticCompositionLocalOf<(() -> Unit)?> {null}
+    /** Same private controls, accessible from Profile without occupying the screen header. */
+    @Composable fun Settings() {
+        val open=openAccess.current
+        if(open!=null) TextButton(onClick=open) {Text(stringResource(R.string.staging_setup_title))}
+    }
     fun isReady()=MemoryStagingKey.read()!=null
     fun configure(builder: OkHttpClient.Builder)=builder.addInterceptor(StagingHeader.interceptor)
         .followRedirects(false).followSslRedirects(false)
@@ -50,13 +56,7 @@ internal object VariantAccess {
             onDispose {if(!existed) window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)}
         }
         if(ready && !edit) {
-            Column(Modifier.fillMaxSize()) {
-                Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal=12.dp),horizontalArrangement=Arrangement.SpaceBetween) {
-                    Text(stringResource(R.string.staging_internal_label),Modifier.weight(1f),style=MaterialTheme.typography.labelSmall)
-                    TextButton(onClick={edit=true},contentPadding=PaddingValues(horizontal=8.dp,vertical=0.dp),modifier=Modifier.height(36.dp)) {Text(stringResource(R.string.staging_access))}
-                }
-                Box(Modifier.weight(1f).consumeWindowInsets(WindowInsets.statusBars)) {content()}
-            }
+            CompositionLocalProvider(openAccess provides {edit=true}) {content()}
         } else {
             var draft by remember {mutableStateOf("")}
             var busy by remember {mutableStateOf(false)}

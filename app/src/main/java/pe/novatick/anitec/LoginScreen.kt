@@ -87,7 +87,7 @@ fun LoginScreen(
     }) }
     val signupPrompt=stringResource(R.string.auth_signup_prompt)
     val signupAction=stringResource(R.string.auth_signup)
-    val noticeText = notice?.let { stringResource(when(it) {
+    val noticeText = notice?.takeUnless { it==Notice.REMOTE_LOGOUT_OK }?.let { stringResource(when(it) {
         Notice.DEMO -> R.string.auth_demo_register
         Notice.RECOVERY -> R.string.auth_recovery
         Notice.REMOTE_LOGOUT_OK -> R.string.auth_logout_ok

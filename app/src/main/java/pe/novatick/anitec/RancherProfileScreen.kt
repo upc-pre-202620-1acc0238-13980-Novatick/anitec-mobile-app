@@ -283,6 +283,7 @@ fun RancherProfileScreen(
 
             // BOTÓN CERRAR SESIÓN
             item {
+                pe.novatick.anitec.core.environment.VariantAccess.Settings()
                 Spacer(modifier = Modifier.height(4.dp))
 
                 OutlinedButton(
