@@ -6,10 +6,10 @@ Esta entrega académica TB2 incluye las Fases 1–5. Es una versión de evaluaci
 
 ## Inicio rápido para evaluadores
 
-GitHub conserva `main` como rama predeterminada. **Clonar main no incluye necesariamente esta entrega.** Mientras esta PR esté pendiente, usar `feature/kotlin-tb2-evaluation`; tras su integración aprobada, usar `develop`.
+`main` es la referencia estable de la TB2 para compañeros y evaluadores. `develop` se conserva para el desarrollo posterior. La etiqueta `v0.2.0-tb2` identifica la publicación académica aprobada.
 
 ```sh
-git clone --branch feature/kotlin-tb2-evaluation https://github.com/upc-pre-202620-1acc0238-13980-Novatick/anitec-mobile-app-kotlin.git
+git clone --branch main https://github.com/upc-pre-202620-1acc0238-13980-Novatick/anitec-mobile-app-kotlin.git
 cd anitec-mobile-app-kotlin
 ```
 
@@ -152,4 +152,4 @@ La estructura se conserva; no mover pantallas ni reorganizar paquetes para ejecu
 - No versionar `local.properties`, claves, sesiones, APK, capturas, informes locales ni `AGENTS.md`. No copiar secretos a ejemplos de documentación.
 - El backend y la infraestructura requieren su propia autorización; esta rama no cambia Render, PostgreSQL, Docker ni Resend.
 
-Antes de distribuir la copia académica definitiva se requiere aprobar e integrar esta PR y validar la rama indicada para evaluadores. Permanecen los riesgos previos documentados: ANR residual al cambiar idioma, ausencia de precondición atómica de versión en DELETE y riesgos de seguridad pendientes del backend. Esta preparación no los declara resueltos ni habilita Fase 6.
+La publicación TB2 no habilita funcionalidades pendientes del TF. Permanecen los riesgos previos documentados: ANR residual al cambiar idioma, ausencia de precondición atómica de versión en DELETE y riesgos de seguridad pendientes del backend. La versión académica no los declara resueltos.
