@@ -30,6 +30,8 @@ import pe.novatick.anitec.features.linking.presentation.*
     val linkingVm=remember(linking,profile.id) {linking?.let {pe.novatick.anitec.features.linking.presentation.LinkingViewModel(it,profile.role)}}
     DisposableEffect(linkingVm){linkingVm?.refresh();onDispose {linkingVm?.close()}}
     val visits=remember(linking,profile.id){linking?.let{FarmerVisitsViewModel(it,profile.role)}}
+    val care=remember(linking,profile.id){linking?.let{BasicCareViewModel(it,profile.role)}}
+    DisposableEffect(care){onDispose{care?.close()}}
     DisposableEffect(visits){onDispose{visits?.close()}}
     val nav=rememberNavController();val entry by nav.currentBackStackEntryAsState()
     val selectVisit:(pe.novatick.anitec.features.linking.domain.FarmerVisit)->Unit={nav.navigate("farmer_visit/${it.visit.id}")}
@@ -59,8 +61,10 @@ import pe.novatick.anitec.features.linking.presentation.*
                     edit={vm.beginMutation();nav.navigate("animal/$id/edit")},deactivate=vm::deactivateAnimal,
                     reloadMutation={vm.reloadMutation(id)},consumeMutation=vm::consumeMutation,observations={animalId ->
                         ObservationSection(animalId,obs,vm.observations,{nav.navigate("animal/$id/observations")},{vm.observations.begin();nav.navigate("animal/$id/observation/new")})
+                        if(care!=null)selected.animalDetail.value?.let{LatestCareSection(it){attention->nav.navigate("care/$id/$attention")}}
                     })
             }
+            composable("care/{animal}/{id}"){entry->care?.let{BasicCareDetail(it,entry.arguments?.getString("animal").orEmpty(),entry.arguments?.getString("id").orEmpty(),state.animalDetail.value){nav.popBackStack()}}}
             composable("animal/{id}/edit") {back -> val id=back.arguments?.getString("id").orEmpty()
                 LaunchedEffect(id) {if(state.animalDetailId!=id) vm.readAnimal(id);vm.refreshFoundation()}
                 AnimalEditScreen(state,vm,{vm.consumeMutation();nav.popBackStack()}) {vm.consumeMutation();nav.popBackStack()}

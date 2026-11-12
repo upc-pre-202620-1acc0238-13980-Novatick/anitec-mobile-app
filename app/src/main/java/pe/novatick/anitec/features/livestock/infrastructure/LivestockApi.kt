@@ -14,7 +14,8 @@ import pe.novatick.anitec.features.auth.infrastructure.Envelope
     val name: String?,val breed: String?,val birthDate: String?,val photoUrl: String?)
 @Keep data class AnimalDetailDto(val id: String?,val code: String?,val name: String?,val species: String?,val sex: String?,
     val breed: String?,val birthDate: String?,val status: String?,val farmId: String?,val farmName: String?,val version: Long?,
-    val speciesId: String?,val photoUrl: String?)
+    val speciesId: String?,val photoUrl: String?,val recentAttentions:List<CareSummaryDto>?=null)
+@Keep data class CareSummaryDto(val id:String?,val title:String?,val vetName:String?,val date:String?,val summary:String?)
 @Keep data class AnimalUpdateRequest(val code: String,val speciesId: String,val sex: String,val name: String?,
     val breed: String?,val birthDate: String?,val photoUrl: String?,val version: Long)
 @Keep data class AnimalStatusDto(val id: String?,val status: String?)

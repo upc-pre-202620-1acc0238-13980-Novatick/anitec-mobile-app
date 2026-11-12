@@ -6,7 +6,7 @@ data class NewAnimal(val farmId: String,val speciesId: String,val sex: AnimalSex
     val name: String?=null,val breed: String?=null,val birthDate: String?=null,val photoUrl: String?=null)
 data class AnimalDetail(val id: String,val code: String,val name: String?,val species: String,val speciesId: String,
     val sex: AnimalSex,val breed: String?,val birthDate: String?,val status: AnimalStatus,val farmId: String,val farmName: String,
-    val version: Long,val photoUrl: String?)
+    val version: Long,val photoUrl: String?,val recentCare:List<CareSummary>?=null)
 fun animalInputErrors(input: NewAnimal,today: String=SimpleDateFormat("yyyy-MM-dd",Locale.US).format(Date())): Set<String> = buildSet {
     fun uuid(v: String)=runCatching {UUID.fromString(v).toString()==v.lowercase(Locale.ROOT)}.getOrDefault(false)
     if(!uuid(input.farmId)) add("farmId")

@@ -24,6 +24,25 @@ class LinkingRepositoryImpl(private val api: LinkingApi,private val requests: Au
  private fun role(expected: Role): Profile=(profile() ?: throw AuthFailure(AuthProblem.RELOGIN)).also {if(it.role!=expected) throw AuthFailure(AuthProblem.FORBIDDEN,403)}
  private suspend fun <T> mapped(block: suspend ()->T): T=try {block()} catch(e: CancellationException){throw e} catch(e: AuthFailure){throw e} catch(_: Exception){invalid()}
  private fun <T> expected(r: Response<T>,code: Int=200)=r.also {if(it.isSuccessful && it.code()!=code) invalid()}
+ private fun basicCare(d:BasicCareDto):BasicCare {
+  if(!validCareDate(d.attentionDate.orEmpty()))invalid()
+  return BasicCare(id(d.id),id(d.animalId),text(d.title),text(d.description),d.attentionDate!!,id(d.veterinarianId),text(d.vetName))
+ }
+ override suspend fun care(id:String,animalId:String)=mapped {
+  val me=profile() ?: throw AuthFailure(AuthProblem.RELOGIN)
+  val result=basicCare(requests.execute{expected(api.care(it,this.id(id)))})
+  if(result.id!=id || result.animalId!=this.id(animalId))invalid()
+  if(profile()?.id!=me.id)throw AuthFailure(AuthProblem.RELOGIN)
+  result
+ }
+ override suspend fun createCare(farmerId:String,input:NewBasicCare)=mapped {
+  val me=role(Role.VETERINARIO);if(!careInputValid(input))throw AuthFailure(AuthProblem.SERVER,400,"VALIDATION_ERROR")
+  animal(farmerId,input.animalId)
+  val result=basicCare(requests.execute{expected(api.createCare(it,BasicCareRequest(input.animalId,input.title,input.description,input.date)),201)})
+  if(result.animalId!=input.animalId || result.veterinarianId!=me.id || result.title!=input.title.trim() || result.description!=input.description || result.date!=input.date)invalid()
+  if(profile()?.id!=me.id)throw AuthFailure(AuthProblem.RELOGIN)
+  result
+ }
  private fun invitation(d: InvitationDto,expectedStatus: String)=Invitation(id(d.invitationId),text(d.vetEmail),text(d.status).also {if(it!=expectedStatus) invalid()},text(d.emailDelivery).also {if(it !in listOf("SENT","UNCONFIRMED")) invalid()},date(d.sentAt))
  override suspend fun links()=mapped {
   val me=profile() ?: throw AuthFailure(AuthProblem.RELOGIN)
@@ -140,7 +159,7 @@ class LinkingRepositoryImpl(private val api: LinkingApi,private val requests: Au
   val species=id(d.speciesId)
   d.birthDate?.let {if("birthDate" in animalInputErrors(NewAnimal(farm,species,AnimalSex.DESCONOCIDO,birthDate=it))) invalid()}
   AnimalDetail(target,text(d.code),d.name,text(d.species),species,AnimalSex.entries.firstOrNull {it.name==d.sex} ?: invalid(),d.breed,d.birthDate,
-   AnimalStatus.entries.firstOrNull {it.name==d.status} ?: invalid(),farm,text(d.farmName),count(d.version),d.photoUrl)
+   AnimalStatus.entries.firstOrNull {it.name==d.status} ?: invalid(),farm,text(d.farmName),count(d.version),d.photoUrl,pe.novatick.anitec.features.livestock.infrastructure.recentCare(d.recentAttentions))
  }
 
 }

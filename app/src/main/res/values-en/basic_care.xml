@@ -1,0 +1,16 @@
+<resources>
+ <string name="care_latest">Latest attention</string>
+ <string name="care_unavailable">The latest attention could not be loaded.</string>
+ <string name="care_empty">No attentions have been recorded.</string>
+ <string name="care_date">Date *</string>
+ <string name="care_reason">Reason *</string>
+ <string name="care_description">Description *</string>
+ <string name="care_form_sub">Record the attention provided to this animal</string>
+ <string name="care_save">Save attention</string>
+ <string name="care_invalid">Check this field. The reason allows up to 150 characters and the date cannot be in the future.</string>
+ <string name="care_uncertain">The result could not be confirmed. Do not submit again: return to the animal and check with the person responsible before another attempt.</string>
+ <string name="care_detail">Attention details</string>
+ <string name="care_summary">Attention summary</string>
+ <string name="care_related">Related attention</string>
+ <string name="care_date_read">Date</string>
+</resources>

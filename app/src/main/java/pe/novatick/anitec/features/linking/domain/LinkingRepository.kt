@@ -7,6 +7,8 @@ data class LinkedFarm(val id: String,val name: String,val animals: Long)
 data class LinkedFarmer(val id: String,val name: String,val animals: Long,val farms: List<LinkedFarm>)
 data class LinkCapacity(val vetId: String,val allowed: Int,val active: Int,val revision: Long)
 interface LinkingRepository {
+    suspend fun createCare(farmerId:String,input:pe.novatick.anitec.features.livestock.domain.NewBasicCare):pe.novatick.anitec.features.livestock.domain.BasicCare = throw pe.novatick.anitec.features.auth.domain.AuthFailure(pe.novatick.anitec.features.auth.domain.AuthProblem.FORBIDDEN)
+    suspend fun care(id:String,animalId:String):pe.novatick.anitec.features.livestock.domain.BasicCare = throw pe.novatick.anitec.features.auth.domain.AuthFailure(pe.novatick.anitec.features.auth.domain.AuthProblem.FORBIDDEN)
     suspend fun upcomingVisits(): List<FarmerVisit> = throw pe.novatick.anitec.features.auth.domain.AuthFailure(pe.novatick.anitec.features.auth.domain.AuthProblem.FORBIDDEN)
     suspend fun scheduleVisit(farmerId:String,animalId:String,scheduledAt:String,reason:String):String = throw pe.novatick.anitec.features.auth.domain.AuthFailure(pe.novatick.anitec.features.auth.domain.AuthProblem.FORBIDDEN)
     suspend fun todayVisits(day: VisitDay): List<HomeVisit> = throw pe.novatick.anitec.features.auth.domain.AuthFailure(pe.novatick.anitec.features.auth.domain.AuthProblem.FORBIDDEN)

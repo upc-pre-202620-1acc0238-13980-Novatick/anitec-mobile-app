@@ -214,7 +214,7 @@ private fun shiftDay(day:VisitDay,amount:Int):VisitDay=Calendar.getInstance().ap
   }
  }
 }
-@Composable private fun VisitDatePicker(initial:Long,dismiss:()->Unit,choose:(Long)->Unit){
+@Composable internal fun VisitDatePicker(initial:Long,dismiss:()->Unit,choose:(Long)->Unit){
  var month by remember{mutableStateOf(Calendar.getInstance().apply{timeInMillis=initial;set(Calendar.DAY_OF_MONTH,1);set(Calendar.HOUR_OF_DAY,12);set(Calendar.MINUTE,0)}.timeInMillis)}
  VisitOverlay(stringResource(R.string.vis_date),dismiss,actions={TextButton(dismiss){LsText(stringResource(R.string.lk_cancel),color=PrimaryGreen)}}){
   Row(verticalAlignment=Alignment.CenterVertically){IconButton({month=Calendar.getInstance().apply{timeInMillis=month;add(Calendar.MONTH,-1)}.timeInMillis},Modifier.testTag("vis_month_previous")){LsText("‹",size=22,color=PrimaryGreen)};LsText(visitDate(month,"MMMM yyyy"),Modifier.weight(1f),size=12,bold=true);IconButton({month=Calendar.getInstance().apply{timeInMillis=month;add(Calendar.MONTH,1)}.timeInMillis},Modifier.testTag("vis_month_next")){LsText("›",size=22,color=PrimaryGreen)}}
