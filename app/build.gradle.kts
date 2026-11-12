@@ -21,18 +21,21 @@ android {
 
     buildTypes {
         debug {
+            isDefault = false
             buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:18080/api/v1/\"")
             buildConfigField("String", "API_ENVIRONMENT", "\"LAB\"")
         }
         create("alpha") {
             initWith(getByName("debug"))
+            isDefault = true
             applicationIdSuffix = ".alpha.linking"
-            versionNameSuffix = "-alpha-visits-f5"
+            versionNameSuffix = "-tb2-evaluation"
             buildConfigField("String", "API_BASE_URL", "\"https://anitec-staging.onrender.com/api/v1/\"")
             buildConfigField("String", "API_ENVIRONMENT", "\"STAGING\"")
         }
         create("labAlpha") {
             initWith(getByName("debug"))
+            isDefault = false
             applicationIdSuffix = ".alpha.lab"
             versionNameSuffix = "-alpha-lab-rc1"
             buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:18080/api/v1/\"")

@@ -24,7 +24,7 @@ class LogoutNavigationTest {
             override fun logoutLocally(): suspend () -> LogoutResult { profile.value = null; return { LogoutResult(pe.novatick.anitec.core.session.InvalidationResult(pe.novatick.anitec.core.session.Absence.VERIFIED,pe.novatick.anitec.core.session.Absence.VERIFIED),true) } }
         }
         val vm = AuthViewModel(repository)
-        compose.setContent { AniTecTheme { AniTecAppNavigation(vm) } }
+        compose.setContent { AniTecTheme { AniTecAppNavigation(vm,linking=pe.novatick.anitec.debug.DebugLinkingRepository()) } }
         if (!restored) {
             // Exercise normal unauthenticated startup before simulating a successful login result.
             compose.waitUntil(8000) { compose.onAllNodesWithText("ANITEC").fetchSemanticsNodes().isNotEmpty() }
@@ -33,8 +33,9 @@ class LogoutNavigationTest {
             compose.onNodeWithText("Acceder").assertExists()
             runBlocking { repository.login("unused", "unused", true) }
         }
-        compose.waitUntil(8000) { compose.onAllNodesWithText("Mi cuenta").fetchSemanticsNodes().isNotEmpty() }
-        compose.onAllNodesWithText("Mi cuenta").onLast().performClick()
+        val profileTab="Mi cuenta"
+        compose.waitUntil(8000) { compose.onAllNodesWithText(profileTab).fetchSemanticsNodes().isNotEmpty() }
+        compose.onAllNodesWithText(profileTab).onLast().performClick()
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("Cerrar sesión"))
         compose.onNodeWithText("Cerrar sesión").performClick()
         compose.waitUntil(8000) { compose.onAllNodesWithText("Acceder").fetchSemanticsNodes().isNotEmpty() }
