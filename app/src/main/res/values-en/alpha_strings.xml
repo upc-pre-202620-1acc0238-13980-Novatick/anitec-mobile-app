@@ -1,0 +1,6 @@
+<resources>
+    <string name="alpha_lab">Internal Alpha · Local laboratory</string>
+    <string name="alpha_staging">Internal Alpha · Staging (restricted access)</string>
+    <string name="alpha_rancher_only">This Alpha includes rancher modules. The veterinarian module is not integrated yet.</string>
+    <string name="alpha_logout">Sign out</string>
+</resources>

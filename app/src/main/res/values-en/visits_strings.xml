@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vis_agenda">My agenda</string>
+    <string name="vis_agenda_sub">Organize your visits</string>
+    <string name="vis_detail">Visit details</string>
+    <string name="vis_information">Information</string>
+    <string name="vis_farmer">Farmer</string>
+    <string name="vis_animal">Animal</string>
+    <string name="vis_reason">Reason for the visit</string>
+    <string name="vis_reason_hint">E.g. General check-up</string>
+    <string name="vis_date">Date</string>
+    <string name="vis_time">Time</string>
+    <string name="vis_hour">Hour (0–23)</string>
+    <string name="vis_minute">Minutes</string>
+    <string name="vis_date_hint">dd/mm/yyyy</string>
+    <string name="vis_select">Select</string>
+    <string name="vis_access_only">Only farmers with active access</string>
+    <string name="vis_private_agenda">The visit will be saved in your veterinary agenda.</string>
+    <string name="vis_save">Save visit</string>
+    <string name="vis_save_short">Save</string>
+    <string name="vis_saving">Saving visit…</string>
+    <string name="vis_saved">Visit scheduled.</string>
+    <string name="vis_read_error">Could not load visits. Retry when connected.</string>
+    <string name="vis_missing">The visit is no longer available in your authorized agenda.</string>
+    <string name="vis_invalid">Select an authorized farmer and animal, enter a reason of 1 to 255 characters, and choose a valid future date and time.</string>
+    <string name="vis_uncertain">Could not confirm whether the visit was saved. Check the agenda before another operation. It will not be retried automatically.</string>
+    <string name="vis_check">Check the day’s agenda</string>
+    <string name="vis_ack">I reviewed the agenda; allow another operation</string>
+    <string name="vis_choose">Choose</string>
+    <string name="vis_previous">Previous dates</string>
+    <string name="vis_next">Next dates</string>
+</resources>

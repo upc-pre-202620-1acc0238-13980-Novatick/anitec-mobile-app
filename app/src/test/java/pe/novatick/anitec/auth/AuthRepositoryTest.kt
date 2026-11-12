@@ -162,4 +162,46 @@ class AuthRepositoryTest {
         r.logoutLocally();job.await();assertNull(r.profile.value);assertNull(store.record)
     }
 
+
+    private fun privateResult()=retrofit2.Response.success(Envelope(true,"ok","2035-01-01T00:00:00Z","private"))
+    @Test fun privateConcurrentExpiryUsesSingleFlightAndOneRetry()=runBlocking {
+        val r=repo();authenticated(r);server.enqueue(pair().setBodyDelay(200,TimeUnit.MILLISECONDS))
+        coroutineScope { (1..12).map { async(Dispatchers.Default) {
+            r.execute { header -> if(header=="Bearer synthetic-access") throw AuthFailure(AuthProblem.UNAUTHORIZED,401,"ACCESS_TOKEN_EXPIRED");privateResult() }
+        } }.awaitAll().forEach { assertEquals("private",it) } }
+        assertEquals(3,server.requestCount)
+    }
+    @Test fun privateForbiddenAndUnavailableNeverRefreshOrClearIdentity()=runBlocking {
+        val r=repo();authenticated(r)
+        for(status in listOf(403,503)) {
+            assertEquals(status,failure { r.execute<String> { throw AuthFailure(AuthProblem.FORBIDDEN,status,"FORBIDDEN") } }.status)
+            assertNotNull(r.profile.value)
+        }
+        assertEquals(2,server.requestCount)
+    }
+    @Test fun privateSessionInvalidClearsIdentityAndCannotRestore()=runBlocking {
+        val r=repo();authenticated(r)
+        assertEquals(401,failure { r.execute<String> { throw AuthFailure(AuthProblem.UNAUTHORIZED,401,"SESSION_INVALID") } }.status)
+        assertNull(r.profile.value);r.restore();assertNull(r.profile.value)
+        assertEquals(AuthProblem.RELOGIN,failure { r.execute<String> { privateResult() } }.problem)
+    }
+    @Test fun privateLateSuccessAfterLogoutIsDiscarded()=runBlocking {
+        val r=repo();authenticated(r);val started=CompletableDeferred<Unit>();val release=CompletableDeferred<Unit>()
+        supervisorScope {
+            val operation=async { r.execute { started.complete(Unit);release.await();privateResult() } }
+            started.await();r.logoutLocally();release.complete(Unit)
+            assertTrue(runCatching { operation.await() }.exceptionOrNull() is CancellationException)
+        }
+        assertNull(r.profile.value)
+    }
+    @Test fun privateMutationTimeoutIsNotRetried()=runBlocking {
+        val r=repo();authenticated(r);var calls=0
+        assertEquals(AuthProblem.NETWORK,failure { r.execute<String> { calls++;throw java.io.IOException("synthetic") } }.problem)
+        assertEquals(1,calls);assertNotNull(r.profile.value)
+    }
+    @Test fun privateExpiredRetryIsBoundedEvenWhenSecondRequestIsExpired()=runBlocking {
+        val r=repo();authenticated(r);server.enqueue(pair());var calls=0
+        failure { r.execute<String> { calls++;throw AuthFailure(AuthProblem.UNAUTHORIZED,401,"ACCESS_TOKEN_EXPIRED") } }
+        assertEquals(2,calls);assertNull(r.profile.value)
+    }
 }

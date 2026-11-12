@@ -51,60 +51,69 @@ fun RancherHomeScreen(
     onNavigateToInviteVets: () -> Unit,
     onNavigateToVisits: () -> Unit,
     onNavigateToVisitDetail: () -> Unit,
-    onNavigateToIndicationDetail: () -> Unit
+    onNavigateToIndicationDetail: () -> Unit,
+    profileName: String?=null,
+    livestockContent: (@Composable ()->Unit)?=null,
+    profileInitials: String?=null
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
+            .background(if(profileName==null) Color(0xFFFAFAFA) else Color.White)
             .verticalScroll(rememberScrollState())
     ) {
         // 1. ENCABEZADO VERDE CURVO CON FOTO Y DATOS
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(210.dp)
+                .height(if(profileName==null) 210.dp else 180.dp)
                 .clip(RancherHeaderShape)
                 .background(PrimaryGreenAccent)
                 .statusBarsPadding()
-                .padding(horizontal = 24.dp, vertical = 16.dp)
+                .padding(horizontal = if(profileName==null) 24.dp else 20.dp)
+                .padding(top=if(profileName==null) 16.dp else 32.dp,bottom=16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(if(profileName==null) Modifier else Modifier.weight(1f).padding(end=12.dp)) {
                     Text(
-                        text = "MI FINCA",
+                        text = if(profileName==null) "MI FINCA" else androidx.compose.ui.res.stringResource(R.string.ls_my_farm),
                         fontFamily = Poppins,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
+                        fontSize = if(profileName==null) 13.sp else 11.sp,
                         color = Color.White.copy(alpha = 0.85f),
                         letterSpacing = 1.sp
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Hola, Juan",
+                        text = if(profileName==null) "Hola, Juan" else androidx.compose.ui.res.stringResource(R.string.ls_greeting,profileName),
                         fontFamily = Poppins,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 32.sp,
+                        fontWeight = if(profileName==null) FontWeight.ExtraBold else FontWeight.Bold,
+                        fontSize = if(profileName==null) 32.sp else 28.sp,
+                        lineHeight = if(profileName==null) androidx.compose.ui.unit.TextUnit.Unspecified else 32.sp,
                         color = Color.White
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Revisa las novedades de tu ganado",
+                        text = if(profileName==null) "Revisa las novedades de tu ganado" else androidx.compose.ui.res.stringResource(R.string.ls_subtitle),
                         fontFamily = Poppins,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp,
+                        fontSize = if(profileName==null) 14.sp else 13.sp,
                         color = Color.White.copy(alpha = 0.95f)
                     )
                 }
 
-                // Imagen Avatar del Ganadero
-                Image(
+                if(profileName!=null) {
+                    Box(Modifier.size(49.dp).clip(CircleShape).background(Color.White),contentAlignment=Alignment.Center) {
+                        Text(profileInitials ?: pe.novatick.anitec.features.livestock.presentation.livestockInitials(profileName,""),
+                            fontFamily=Poppins,fontWeight=FontWeight.Bold,fontSize=20.sp,color=pe.novatick.anitec.ui.theme.PrimaryGreen)
+                    }
+                } else Image(
                     painter = painterResource(id = R.drawable.profile_rancher_user),
-                    contentDescription = "Foto de perfil Juan",
+                    contentDescription = androidx.compose.ui.res.stringResource(R.string.ls_avatar),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(72.dp)
@@ -114,7 +123,12 @@ fun RancherHomeScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(if(livestockContent==null) 12.dp else 16.dp))
+
+        if(livestockContent!=null) {
+            Column(Modifier.padding(horizontal=20.dp,vertical=4.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) { livestockContent() }
+            return@Column
+        }
 
         // 2. TARJETAS DE MÉTRICAS (Animales Activos y Vet. Vinculados)
         Row(

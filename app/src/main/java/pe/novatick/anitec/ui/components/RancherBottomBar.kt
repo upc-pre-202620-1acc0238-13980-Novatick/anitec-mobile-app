@@ -38,6 +38,7 @@ import pe.novatick.anitec.ui.theme.PrimaryGreenAccent
 @Composable
 fun RancherBottomBar(
     currentTab: RancherTab,
+    labels: Map<RancherTab,String> = emptyMap(),
     onTabSelected: (RancherTab) -> Unit
 ) {
     Box(
@@ -98,7 +99,7 @@ fun RancherBottomBar(
 
                         Icon(
                             painter = painterResource(id = tab.iconRes),
-                            contentDescription = tab.title,
+                            contentDescription = labels[tab] ?: tab.title,
                             tint = animatedColor,
                             modifier = Modifier.size(24.dp)
                         )
@@ -106,7 +107,7 @@ fun RancherBottomBar(
                         Spacer(modifier = Modifier.height(3.dp))
 
                         Text(
-                            text = tab.title,
+                            text = labels[tab] ?: tab.title,
                             fontFamily = Poppins,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                             fontSize = 11.sp,

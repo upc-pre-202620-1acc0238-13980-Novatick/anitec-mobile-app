@@ -1,0 +1,14 @@
+<resources>
+    <plurals name="ls_active_global_count">
+        <item quantity="one">%1$d active animal - All farms</item>
+        <item quantity="other">%1$d active animals - All farms</item>
+    </plurals>
+    <plurals name="ls_active_farm_count">
+        <item quantity="one">%1$d active animal - This farm</item>
+        <item quantity="other">%1$d active animals - This farm</item>
+    </plurals>
+    <plurals name="ls_result_count">
+        <item quantity="one">%1$d result</item>
+        <item quantity="other">%1$d results</item>
+    </plurals>
+</resources>

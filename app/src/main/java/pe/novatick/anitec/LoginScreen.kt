@@ -43,6 +43,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import pe.novatick.anitec.features.auth.domain.AuthProblem
 import pe.novatick.anitec.features.auth.presentation.Notice
+import pe.novatick.anitec.features.auth.presentation.AuthMessage
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -67,6 +68,7 @@ fun LoginScreen(
     busy: Boolean,
     problem: AuthProblem?,
     notice: Notice?,
+    onContinueVerification: () -> Unit = {}, unverified: Boolean=false,
     onRetryRestore: () -> Unit,
     onRetryLogout: () -> Unit, logoutBlocked: Boolean, retryLogout: Boolean
 ) {
@@ -85,13 +87,14 @@ fun LoginScreen(
     }) }
     val signupPrompt=stringResource(R.string.auth_signup_prompt)
     val signupAction=stringResource(R.string.auth_signup)
-    val noticeText = notice?.let { stringResource(when(it) {
+    val noticeText = notice?.takeUnless { it==Notice.REMOTE_LOGOUT_OK }?.let { stringResource(when(it) {
         Notice.DEMO -> R.string.auth_demo_register
         Notice.RECOVERY -> R.string.auth_recovery
         Notice.REMOTE_LOGOUT_OK -> R.string.auth_logout_ok
         Notice.REMOTE_LOGOUT_FAILED -> R.string.auth_logout_failed
         Notice.LOGOUT_INCOMPLETE -> R.string.auth_logout_incomplete
         Notice.REMOTE_ONLY -> R.string.auth_logout_remote_only
+        Notice.VERIFIED -> R.string.reg_verified
     }) }
 
     val fieldBackgroundColor = Color(0xFFF3F5F8)
@@ -314,24 +317,20 @@ fun LoginScreen(
                 )
             }
 
+            if(unverified) androidx.compose.material3.TextButton(onClick=onContinueVerification,enabled=!busy) {
+                Text(stringResource(R.string.reg_continue))
+            }
             if(retryLogout) androidx.compose.material3.TextButton(onClick=onRetryLogout,enabled=!busy) {
                 Text(stringResource(R.string.auth_retry_logout))
             }
-            noticeText?.let { Text(it, color = PrimaryGreen) }
+            noticeText?.let { AuthMessage(it) }
             if(problem == AuthProblem.NETWORK) {
                 androidx.compose.material3.TextButton(onClick=onRetryRestore,enabled=!busy) {
                     Text(stringResource(R.string.auth_restore))
                 }
             }
             // Mensaje de error opcional si las credenciales fallan:
-            errorMessage?.let { error ->
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = error,
-                    color = Color.Red,
-                    fontSize = 12.sp
-                )
-            }
+            errorMessage?.let { AuthMessage(it,isError=true) }
 
             Spacer(modifier = Modifier.height(16.dp))
 

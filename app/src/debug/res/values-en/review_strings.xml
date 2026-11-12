@@ -1,0 +1,21 @@
+<resources>
+    <string name="qa_local">Local QA</string>
+    <string name="qa_scenarios">Test scenarios</string>
+    <string name="qa_notice">Controlled data only. Changing the scenario resets this view; no backend is used.</string>
+    <string name="qa_content">Normal content</string>
+    <string name="qa_empty">No animals</string>
+    <string name="qa_no_farms">No farms</string>
+    <string name="qa_loading">Loading queries</string>
+    <string name="qa_error">Read error</string>
+    <string name="qa_saving">Saving pending (3 seconds)</string>
+    <string name="qa_save_error">Save error</string>
+    <string name="qa_uncertain">Uncertain save</string>
+    <string name="qa_close">Close</string>
+    <string name="qa_restart">Reset test data</string>
+    <string name="qa_obs_empty">Empty observations</string>
+    <string name="qa_obs_loading">Loading observations</string>
+    <string name="qa_obs_error">Observation read error</string>
+    <string name="qa_obs_save_error">Observation save error</string>
+    <string name="qa_obs_uncertain">Unconfirmed observation</string>
+    <string name="qa_obs_saving">Saving observation</string>
+</resources>

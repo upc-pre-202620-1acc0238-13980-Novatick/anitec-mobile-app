@@ -1,0 +1,6 @@
+<!-- Figma VRl8XdC5NZzvfBijUy0zYy: official 3B more; paths preserved. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="20dp" android:height="20dp" android:viewportWidth="20" android:viewportHeight="20">
+  <path android:pathData="M10 5.33333C10.6443 5.33333 11.1667 4.811 11.1667 4.16667C11.1667 3.52233 10.6443 3 10 3C9.35567 3 8.83333 3.52233 8.83333 4.16667C8.83333 4.811 9.35567 5.33333 10 5.33333Z" android:fillColor="#10A363"/>
+  <path android:pathData="M10 11.1667C10.6443 11.1667 11.1667 10.6443 11.1667 10C11.1667 9.35567 10.6443 8.83333 10 8.83333C9.35567 8.83333 8.83333 9.35567 8.83333 10C8.83333 10.6443 9.35567 11.1667 10 11.1667Z" android:fillColor="#10A363"/>
+  <path android:pathData="M10 17C10.6443 17 11.1667 16.4777 11.1667 15.8333C11.1667 15.189 10.6443 14.6667 10 14.6667C9.35567 14.6667 8.83333 15.189 8.83333 15.8333C8.83333 16.4777 9.35567 17 10 17Z" android:fillColor="#10A363"/>
+</vector>
