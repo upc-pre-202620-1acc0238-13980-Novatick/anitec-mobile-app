@@ -71,7 +71,7 @@
     <string name="ls_invite_vet">Invitar veterinario</string>
     <string name="ls_upcoming_visits">Próximas visitas</string>
     <string name="ls_view_visits">Ver visitas</string>
-    <string name="ls_visits_neutral">Tus próximas visitas aparecerán aquí</string>
+    <string name="ls_visits_neutral">Las visitas para ganaderos aún no están disponibles.</string>
     <string name="ls_recent_indications">Indicaciones recientes</string>
     <string name="ls_indications_neutral">Tus indicaciones aparecerán aquí</string>
     <string name="ls_available_later">Disponible próximamente.</string>

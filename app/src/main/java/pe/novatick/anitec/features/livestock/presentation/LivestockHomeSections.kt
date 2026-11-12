@@ -24,7 +24,6 @@ import pe.novatick.anitec.ui.theme.*
 
 /** Clinical data is not integrated in 3A. These neutral placeholders make no empty-list claim. */
 @Composable internal fun LivestockHomeSections(onRegister: ()->Unit={},onInvite: ()->Unit={}) {
-    val unavailable=rememberLivestockUnavailableAction()
     Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {
         LsText(stringResource(R.string.ls_quick_actions),bold=true)
         Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
@@ -35,7 +34,7 @@ import pe.novatick.anitec.ui.theme.*
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
             LsText(stringResource(R.string.ls_upcoming_visits),bold=true)
-            TextButton(onClick=unavailable) {LsText(stringResource(R.string.ls_view_visits),size=11,bold=true,color=PrimaryGreen)}
+            TextButton(onClick={},enabled=false) {LsText(stringResource(R.string.ls_view_visits),size=11,bold=true,color=NeutralSlate)}
         }
         ClinicalPlaceholder(R.drawable.ic_calendar,stringResource(R.string.ls_visits_neutral))
     }

@@ -40,6 +40,7 @@ class LogoutNavigationTest {
         compose.onNodeWithText("Cerrar sesión").performClick()
         compose.waitUntil(8000) { compose.onAllNodesWithText("Acceder").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Acceder").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Sesión cerrada y revocada en el servidor.").assertDoesNotExist()
         compose.onNodeWithText("Gestiona el bienestar de\ntus animales").assertDoesNotExist()
         compose.onNodeWithText("Ganado").assertDoesNotExist()
         compose.onNodeWithText("Agenda").assertDoesNotExist()
