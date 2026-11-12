@@ -56,10 +56,6 @@ import pe.novatick.anitec.ui.theme.*
     VeterinaryShortcut(stringResource(R.string.lk_schedule),R.drawable.link_schedule_official,Modifier.weight(1f).testTag("home_schedule_unavailable"),available=false)
     VeterinaryShortcut(stringResource(R.string.lk_record_care),R.drawable.link_attention_official,Modifier.weight(1f).testTag("home_care_unavailable"),available=false)
    }
-   Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-    VeterinaryShortcut(stringResource(R.string.lk_farmers),R.drawable.link_home_farmers_official,Modifier.weight(1f),onClick=farmers)
-    VeterinaryShortcut(stringResource(R.string.lk_invitations),R.drawable.link_mail_official,Modifier.weight(1f),onClick=invitations)
-   }
    Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){LsText(stringResource(R.string.lk_agenda_today),Modifier.weight(1f),bold=true);TextButton({},enabled=false){LsText(stringResource(R.string.lk_view_agenda),size=10,color=NeutralSlate)}}
    if(s.today.loading)LsLoading(stringResource(R.string.lk_loading))
    s.today.error?.let {LinkError(it);LsAction(stringResource(R.string.lk_reload),{vm.readToday()})}
